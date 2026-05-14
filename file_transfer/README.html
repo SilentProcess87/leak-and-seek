@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>File Transfer Automation — Documentation</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #181b23;
+      --border:    #2a2d38;
+      --text:      #d4d4dc;
+      --text-dim:  #8b8d98;
+      --accent:    #6c8cff;
+      --accent-bg: rgba(108, 140, 255, .08);
+      --green:     #4ade80;
+      --orange:    #f59e0b;
+      --red:       #f87171;
+      --code-bg:   #13151c;
+      --radius:    10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', Inter, system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.7; padding: 0;
+    }
+
+    /* ── Layout ──────────────────────────────────────────────────── */
+    .layout { display: flex; min-height: 100vh; }
+
+    nav {
+      position: sticky; top: 0; align-self: flex-start;
+      width: 270px; min-width: 230px; height: 100vh; overflow-y: auto;
+      background: var(--surface); border-right: 1px solid var(--border);
+      padding: 28px 18px; flex-shrink: 0;
+    }
+    nav .logo { font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 28px; display:flex; align-items:center; gap:8px; }
+    nav .logo span { font-size: 1.3rem; }
+    nav ul { list-style: none; }
+    nav ul li { margin-bottom: 2px; }
+    nav ul li a {
+      display: block; padding: 6px 12px; border-radius: 6px;
+      color: var(--text-dim); text-decoration: none; font-size: .85rem;
+      transition: all .15s;
+    }
+    nav ul li a:hover { background: var(--accent-bg); color: var(--accent); }
+    nav .section-label {
+      font-size: .68rem; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--text-dim); margin: 16px 0 4px 12px; opacity:.7;
+    }
+
+    main { flex: 1; max-width: 900px; padding: 48px 56px 80px; }
+
+    h1 { font-size: 2.1rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
+    h2 { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 52px; margin-bottom: 14px;
+         padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.05rem; font-weight: 600; color: #fff; margin-top: 28px; margin-bottom: 10px; }
+    p  { margin-bottom: 14px; }
+
+    .subtitle { color: var(--text-dim); font-size: 1.05rem; margin-bottom: 36px; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Cards ─────────────────────────────────────────────────────── */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px,1fr)); gap: 12px; margin: 18px 0 8px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px; transition: border-color .2s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card .icon { font-size: 1.5rem; margin-bottom: 8px; }
+    .card .title { font-weight: 600; color: #fff; margin-bottom: 3px; font-size: .92rem; }
+    .card .desc  { font-size: .8rem; color: var(--text-dim); }
+
+    /* ── Code ──────────────────────────────────────────────────────── */
+    pre {
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px 20px; overflow-x: auto; font-size: .84rem; line-height: 1.6;
+      margin: 10px 0 16px; position: relative;
+    }
+    pre code { font-family: 'Cascadia Code','Fira Code','Consolas',monospace; color: #c5cdd9; }
+    code {
+      font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+      background: var(--code-bg); padding: 2px 7px; border-radius: 4px; font-size: .86em;
+    }
+    pre code { background: none; padding: 0; }
+    .lang-label {
+      position: absolute; top: 8px; right: 14px;
+      font-size: .63rem; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--text-dim); opacity: .55;
+    }
+    .kw  { color: #c792ea; }
+    .str { color: #c3e88d; }
+    .cm  { color: #546e7a; font-style: italic; }
+    .var { color: #82aaff; }
+
+    /* ── Steps ──────────────────────────────────────────────────────── */
+    .steps { counter-reset: step; list-style: none; padding: 0; margin: 12px 0 16px; }
+    .steps li {
+      counter-increment: step; position: relative;
+      padding: 12px 16px 12px 54px; margin-bottom: 8px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      font-size: .91rem;
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute; left: 16px; top: 12px;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--accent); color: #fff; font-weight: 700; font-size: .8rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Tables ─────────────────────────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: .88rem; }
+    th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-dim); font-weight: 600; font-size: .76rem; text-transform: uppercase; letter-spacing: .04em; }
+    td code { font-size: .8rem; }
+
+    /* ── Callouts ───────────────────────────────────────────────────── */
+    .callout {
+      border-left: 3px solid var(--accent); background: var(--accent-bg);
+      padding: 12px 16px; border-radius: 0 var(--radius) var(--radius) 0;
+      margin: 14px 0; font-size: .88rem;
+    }
+    .callout.warn  { border-color: var(--orange); background: rgba(245,158,11,.07); }
+    .callout.error { border-color: var(--red);    background: rgba(248,113,113,.07); }
+    .callout .label { font-weight: 700; margin-bottom: 4px; display:flex; align-items:center; gap:6px; }
+
+    /* ── Diagram ────────────────────────────────────────────────────── */
+    .diagram {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 24px 20px; margin: 16px 0; text-align: center; font-family: 'Cascadia Code', monospace;
+      font-size: .78rem; line-height: 1.8; color: var(--text-dim); overflow-x: auto; white-space: pre;
+    }
+
+    footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: .78rem; }
+
+    @media (max-width: 900px) {
+      .layout { flex-direction: column; }
+      nav { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 16px; }
+      main { padding: 24px 18px 60px; }
+      .card-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 500px) { .card-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ─── Sidebar ───────────────────────────────────────────────── -->
+  <nav>
+    <div class="logo"><span>📂</span> File Transfer</div>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+    </ul>
+    <div class="section-label">Getting Started</div>
+    <ul>
+      <li><a href="#prerequisites">Prerequisites</a></li>
+      <li><a href="#installation">Installation</a></li>
+      <li><a href="#quick-run">Quick Run</a></li>
+    </ul>
+    <div class="section-label">Configuration</div>
+    <ul>
+      <li><a href="#env">.env — Credentials</a></li>
+      <li><a href="#config-yaml">config.yaml — Rules</a></li>
+    </ul>
+    <div class="section-label">Messaging</div>
+    <ul>
+      <li><a href="#handler-slack">Slack</a></li>
+      <li><a href="#handler-teams">Microsoft Teams</a></li>
+      <li><a href="#handler-whatsapp">WhatsApp</a></li>
+      <li><a href="#handler-telegram">Telegram</a></li>
+      <li><a href="#handler-zoom">Zoom</a></li>
+    </ul>
+    <div class="section-label">Cloud Storage</div>
+    <ul>
+      <li><a href="#handler-onedrive">OneDrive</a></li>
+      <li><a href="#handler-box">Box</a></li>
+    </ul>
+    <div class="section-label">Transfer</div>
+    <ul>
+      <li><a href="#handler-local">Local / Network Copy</a></li>
+      <li><a href="#handler-sftp">SFTP</a></li>
+      <li><a href="#handler-wetransfer">WeTransfer</a></li>
+    </ul>
+    <div class="section-label">Advanced</div>
+    <ul>
+      <li><a href="#custom-handler">Add a Custom Handler</a></li>
+      <li><a href="#cli">CLI Options</a></li>
+      <li><a href="#troubleshooting">Troubleshooting</a></li>
+    </ul>
+  </nav>
+
+  <!-- ─── Main Content ──────────────────────────────────────────── -->
+  <main>
+
+    <!-- Overview ────────────────────────────────────────────────── -->
+    <h1 id="overview">File Transfer Automation</h1>
+    <p class="subtitle">
+      Drop a file into a watched folder&nbsp;→&nbsp;it gets routed automatically to Slack, Teams, WhatsApp, Telegram, Zoom, OneDrive, Box, SFTP, WeTransfer, or a local backup — based on rules you define.
+    </p>
+
+    <div class="card-grid">
+      <div class="card"><div class="icon">💬</div><div class="title">Slack</div><div class="desc">Upload to any channel or DM.</div></div>
+      <div class="card"><div class="icon">🟣</div><div class="title">Teams</div><div class="desc">Post files to a Teams channel.</div></div>
+      <div class="card"><div class="icon">📱</div><div class="title">WhatsApp</div><div class="desc">Send via Twilio WhatsApp API.</div></div>
+      <div class="card"><div class="icon">✈️</div><div class="title">Telegram</div><div class="desc">Send documents to any chat.</div></div>
+      <div class="card"><div class="icon">🎥</div><div class="title">Zoom</div><div class="desc">Share files in Zoom Chat.</div></div>
+      <div class="card"><div class="icon">🔷</div><div class="title">OneDrive</div><div class="desc">Sync via desktop client.</div></div>
+      <div class="card"><div class="icon">📦</div><div class="title">Box</div><div class="desc">Sync via desktop client.</div></div>
+      <div class="card"><div class="icon">📁</div><div class="title">Local Copy</div><div class="desc">Copy to a local/network path.</div></div>
+      <div class="card"><div class="icon">🔐</div><div class="title">SFTP</div><div class="desc">Upload via SSH/SFTP.</div></div>
+      <div class="card"><div class="icon">🌐</div><div class="title">WeTransfer</div><div class="desc">Browser-automated file send.</div></div>
+    </div>
+
+    <!-- Architecture ────────────────────────────────────────────── -->
+    <h2 id="architecture">How It Works</h2>
+    <p>The tool runs a continuous loop watching a folder. New files are matched against rules (top-down, first match wins) and dispatched to one or more handlers in sequence.</p>
+
+    <div class="diagram">
+┌──────────────┐        ┌──────────────┐
+│ inbox/ folder│──file─▶│   Watcher    │
+└──────────────┘        └──────┬───────┘
+                               │  match rules
+          ┌──────┬──────┬──────┼──────┬──────┬──────┐
+          ▼      ▼      ▼      ▼      ▼      ▼      ▼
+       Slack  Teams  Telegram Zoom  OneDrive  Box
+                  WhatsApp        SFTP  Local  WeTransfer</div>
+
+    <p>Each handler is a self-contained Python class. Credentials come from <code>.env</code>; routing logic lives in <code>config.yaml</code>.</p>
+
+    <!-- Prerequisites ───────────────────────────────────────────── -->
+    <h2 id="prerequisites">Prerequisites</h2>
+    <ul class="steps">
+      <li><strong>Python 3.10+</strong> — verify with <code>python --version</code></li>
+      <li><strong>pip</strong> — comes with Python; used to install dependencies</li>
+      <li><strong>Service credentials</strong> — only for the handlers you plan to use (see each handler's setup section below)</li>
+    </ul>
+
+    <!-- Installation ────────────────────────────────────────────── -->
+    <h2 id="installation">Installation</h2>
+    <ol class="steps">
+      <li>
+        <strong>Install Python packages</strong>
+        <pre><code>pip install -r requirements.txt</code></pre>
+      </li>
+      <li>
+        <strong>Create your environment file</strong>
+        <pre><code><span class="cm"># PowerShell</span>
+copy .env.example .env</code></pre>
+      </li>
+      <li><strong>Edit <code>.env</code></strong> — fill in credentials for the services you want to use. You only need to configure the handlers you enable in <code>config.yaml</code>.</li>
+      <li><strong>(Optional) Customise <code>config.yaml</code></strong> — add, remove, or reorder routing rules.</li>
+    </ol>
+
+    <!-- Quick Run ───────────────────────────────────────────────── -->
+    <h2 id="quick-run">Quick Run</h2>
+    <pre><span class="lang-label">powershell</span><code><span class="cm"># Start the watcher (Ctrl+C to stop)</span>
+python main.py</code></pre>
+    <p>The watch folder (default <code>inbox\</code>) is created if missing. Drop a file in there and watch the logs.</p>
+
+    <div class="callout">
+      <div class="label">💡 Tip</div>
+      To test quickly without any external credentials, enable only the <code>local_copy</code> handler.
+    </div>
+
+    <!-- ═══════════ .env ════════════════════════════════════════════ -->
+    <h2 id="env">.env — Credentials &amp; Paths</h2>
+    <p>Every handler reads its secrets from environment variables in <code>.env</code>. Below is the full reference, grouped by service.</p>
+
+    <h3>General</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>LOG_LEVEL</code></td><td>Logging verbosity</td><td><code>INFO</code></td></tr>
+        <tr><td><code>WATCH_FOLDER</code></td><td>Folder the watcher monitors</td><td><code>./inbox</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Slack</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>SLACK_BOT_TOKEN</code></td><td>Bot User OAuth Token (<code>xoxb-…</code>)</td></tr>
+        <tr><td><code>SLACK_CHANNEL</code></td><td>Channel ID or user ID</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Microsoft Teams</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>TEAMS_TENANT_ID</code></td><td>Azure AD tenant ID</td></tr>
+        <tr><td><code>TEAMS_CLIENT_ID</code></td><td>App registration client ID</td></tr>
+        <tr><td><code>TEAMS_CLIENT_SECRET</code></td><td>App registration client secret</td></tr>
+        <tr><td><code>TEAMS_TEAM_ID</code></td><td>Target team ID</td></tr>
+        <tr><td><code>TEAMS_CHANNEL_ID</code></td><td>Target channel ID</td></tr>
+      </tbody>
+    </table>
+
+    <h3>WhatsApp (Twilio)</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>TWILIO_ACCOUNT_SID</code></td><td>Twilio Account SID</td></tr>
+        <tr><td><code>TWILIO_AUTH_TOKEN</code></td><td>Twilio Auth Token</td></tr>
+        <tr><td><code>WHATSAPP_FROM_NUMBER</code></td><td>Sender (<code>whatsapp:+14155238886</code>)</td></tr>
+        <tr><td><code>WHATSAPP_TO_NUMBER</code></td><td>Recipient (<code>whatsapp:+…</code>)</td></tr>
+        <tr><td><code>WHATSAPP_MEDIA_BASE_URL</code></td><td>Public URL where Twilio can fetch files</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Telegram</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>TELEGRAM_BOT_TOKEN</code></td><td>Bot token from @BotFather</td></tr>
+        <tr><td><code>TELEGRAM_CHAT_ID</code></td><td>Numeric chat/group ID</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Zoom</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>ZOOM_ACCOUNT_ID</code></td><td>Zoom account ID</td></tr>
+        <tr><td><code>ZOOM_CLIENT_ID</code></td><td>Server-to-Server OAuth client ID</td></tr>
+        <tr><td><code>ZOOM_CLIENT_SECRET</code></td><td>Server-to-Server OAuth client secret</td></tr>
+        <tr><td><code>ZOOM_CHAT_CHANNEL_ID</code></td><td>Target Zoom Chat channel ID</td></tr>
+      </tbody>
+    </table>
+
+    <h3>OneDrive (desktop sync)</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th><th>Typical path</th></tr></thead>
+      <tbody>
+        <tr><td><code>ONEDRIVE_SYNC_FOLDER</code></td><td>Local folder synced by OneDrive</td><td><code>C:\Users\&lt;you&gt;\OneDrive\Uploads</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Box (desktop sync)</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th><th>Typical path</th></tr></thead>
+      <tbody>
+        <tr><td><code>BOX_SYNC_FOLDER</code></td><td>Local folder synced by Box Drive</td><td><code>C:\Users\&lt;you&gt;\Box\Uploads</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>SFTP</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>SFTP_HOST</code></td><td>Hostname or IP</td></tr>
+        <tr><td><code>SFTP_PORT</code></td><td>SSH port (default <code>22</code>)</td></tr>
+        <tr><td><code>SFTP_USERNAME</code></td><td>Login username</td></tr>
+        <tr><td><code>SFTP_PASSWORD</code></td><td>Password (or leave empty if using key)</td></tr>
+        <tr><td><code>SFTP_PRIVATE_KEY</code></td><td>Path to SSH private key (optional)</td></tr>
+        <tr><td><code>SFTP_REMOTE_DIR</code></td><td>Remote upload directory</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Local / Network Copy</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>LOCAL_COPY_DEST</code></td><td>Destination path (local or UNC)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>WeTransfer (Playwright + MailSlurp)</h3>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>WETRANSFER_RECIPIENT_EMAIL</code></td><td>Email address to send the file to</td></tr>
+        <tr><td><code>WETRANSFER_SENDER_EMAIL</code></td><td>Sender email — must match a MailSlurp inbox for auto-verification</td></tr>
+        <tr><td><code>MAILSLURP_API_KEY</code></td><td>MailSlurp API key — used to auto-fetch the WeTransfer verification code</td></tr>
+        <tr><td><code>WETRANSFER_HEADLESS</code></td><td><code>true</code> / <code>false</code> — run browser headless (default <code>true</code>)</td></tr>
+        <tr><td><code>WETRANSFER_DEBUG</code></td><td><code>true</code> / <code>false</code> — save debug screenshots (default <code>false</code>)</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ═══════════ config.yaml
+    <h2 id="config-yaml">config.yaml — Routing Rules</h2>
+    <p>Rules are evaluated <strong>top-down, first-match-wins</strong>. Each rule has a glob pattern and one or more handlers that fire in sequence.</p>
+
+    <pre><span class="lang-label">yaml</span><code><span class="var">rules</span>:
+  - <span class="var">name</span>: <span class="str">pdf_reports</span>
+    <span class="var">pattern</span>: <span class="str">"*.pdf"</span>
+    <span class="var">handlers</span>:
+      - <span class="var">type</span>: <span class="str">slack</span>
+        <span class="var">message</span>: <span class="str">"New PDF report"</span>
+
+  - <span class="var">name</span>: <span class="str">word_docs</span>
+    <span class="var">pattern</span>: <span class="str">"*.docx"</span>
+    <span class="var">handlers</span>:
+      - <span class="var">type</span>: <span class="str">teams</span>
+      - <span class="var">type</span>: <span class="str">onedrive</span>
+
+  - <span class="var">name</span>: <span class="str">image_alerts</span>
+    <span class="var">pattern</span>: <span class="str">"*.png"</span>
+    <span class="var">handlers</span>:
+      - <span class="var">type</span>: <span class="str">telegram</span>
+      - <span class="var">type</span>: <span class="str">whatsapp</span>
+
+  - <span class="var">name</span>: <span class="str">archive_sync</span>
+    <span class="var">pattern</span>: <span class="str">"*.zip"</span>
+    <span class="var">handlers</span>:
+      - <span class="var">type</span>: <span class="str">box</span>
+
+  - <span class="var">name</span>: <span class="str">wetransfer_large</span>
+    <span class="var">pattern</span>: <span class="str">"*.iso"</span>
+    <span class="var">handlers</span>:
+      - <span class="var">type</span>: <span class="str">wetransfer</span>
+        <span class="var">message</span>: <span class="str">"Large file transfer"</span>
+
+  - <span class="var">name</span>: <span class="str">catch_all</span>
+    <span class="var">pattern</span>: <span class="str">"*"</span>
+    <span class="var">handlers</span>:
+      - <span class="var">type</span>: <span class="str">slack</span></code></pre>
+
+    <div class="callout">
+      <div class="label">💡 Tip</div>
+      Place more-specific rules above broader ones. The catch-all <code>*</code> should always be last.
+    </div>
+
+    <!-- ═══════════ HANDLER DOCS ════════════════════════════════════ -->
+
+    <!-- Slack ───────────────────────────────────────────────────── -->
+    <h2 id="handler-slack">Handler: Slack</h2>
+    <p>Uploads files to a Slack channel or DM using the Slack Bot API.</p>
+    <h3>Setup</h3>
+    <ol class="steps">
+      <li>Go to <a href="https://api.slack.com/apps" target="_blank">api.slack.com/apps</a> → <strong>Create New App → From Scratch</strong>.</li>
+      <li>Under <strong>OAuth &amp; Permissions</strong>, add scopes: <code>files:write</code>, <code>chat:write</code>.</li>
+      <li><strong>Install to Workspace</strong> and copy the <strong>Bot User OAuth Token</strong> (<code>xoxb-…</code>).</li>
+      <li>Set <code>SLACK_BOT_TOKEN</code> and <code>SLACK_CHANNEL</code> in <code>.env</code>.</li>
+      <li>Invite the bot to the channel: <code>/invite @YourBotName</code>.</li>
+    </ol>
+    <h3>Rule options</h3>
+    <table><thead><tr><th>Key</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>type</code></td><td>Yes</td><td>Must be <code>slack</code></td></tr>
+        <tr><td><code>message</code></td><td>No</td><td>Text sent with the file</td></tr>
+      </tbody>
+    </table>
+
+    <!-- Teams ───────────────────────────────────────────────────── -->
+    <h2 id="handler-teams">Handler: Microsoft Teams</h2>
+    <p>Uploads files to a Teams channel via the Microsoft Graph API, then posts a link message.</p>
+    <h3>Setup</h3>
+    <ol class="steps">
+      <li>In the <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank">Azure Portal → App Registrations</a>, create a new registration.</li>
+      <li>Under <strong>API Permissions</strong>, add <em>Application</em> permissions: <code>ChannelMessage.Send</code>, <code>Files.ReadWrite.All</code>, <code>ChannelSettings.Read.All</code>. Grant admin consent.</li>
+      <li>Under <strong>Certificates &amp; secrets</strong>, create a client secret.</li>
+      <li>Copy the <strong>Tenant ID</strong>, <strong>Client ID</strong>, and <strong>Client Secret</strong> into <code>.env</code>.</li>
+      <li>Get the <strong>Team ID</strong> and <strong>Channel ID</strong> from Teams (channel link URL or Graph API explorer) and set them in <code>.env</code>.</li>
+    </ol>
+    <h3>Rule options</h3>
+    <table><thead><tr><th>Key</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>type</code></td><td>Yes</td><td>Must be <code>teams</code></td></tr>
+        <tr><td><code>message</code></td><td>No</td><td>Text posted with the file link</td></tr>
+      </tbody>
+    </table>
+
+    <!-- WhatsApp ────────────────────────────────────────────────── -->
+    <h2 id="handler-whatsapp">Handler: WhatsApp</h2>
+    <p>Sends files via the <a href="https://www.twilio.com/whatsapp" target="_blank">Twilio WhatsApp Business API</a>. Twilio fetches the file from a public URL you provide.</p>
+    <h3>Setup</h3>
+    <ol class="steps">
+      <li>Sign up at <a href="https://www.twilio.com/console" target="_blank">twilio.com/console</a> and note your <strong>Account SID</strong> and <strong>Auth Token</strong>.</li>
+      <li>Activate the <strong>WhatsApp Sandbox</strong> (or register a WhatsApp Business number).</li>
+      <li>Set <code>WHATSAPP_FROM_NUMBER</code> (e.g. <code>whatsapp:+14155238886</code>) and <code>WHATSAPP_TO_NUMBER</code>.</li>
+      <li>Provide a <code>WHATSAPP_MEDIA_BASE_URL</code> — a publicly reachable URL where the watcher's files are available (e.g. via <a href="https://ngrok.com" target="_blank">ngrok</a> pointing to the inbox folder).</li>
+    </ol>
+    <div class="callout warn">
+      <div class="label">⚠️ Media URL</div>
+      Twilio must be able to fetch the file over HTTP. You need to serve the inbox folder via a simple HTTP server or tunnel. Example: <code>npx http-server ./inbox -p 8080</code> + ngrok.
+    </div>
+    <h3>Rule options</h3>
+    <table><thead><tr><th>Key</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>type</code></td><td>Yes</td><td>Must be <code>whatsapp</code></td></tr>
+        <tr><td><code>message</code></td><td>No</td><td>Text sent with the file</td></tr>
+      </tbody>
+    </table>
+
+    <!-- Telegram ────────────────────────────────────────────────── -->
+    <h2 id="handler-telegram">Handler: Telegram</h2>
+    <p>Sends files as documents to a Telegram chat or group using the <a href="https://core.telegram.org/bots/api" target="_blank">Bot API</a>.</p>
+    <h3>Setup</h3>
+    <ol class="steps">
+      <li>Open Telegram and message <strong>@BotFather</strong>. Run <code>/newbot</code> and follow the prompts to create a bot. Copy the <strong>token</strong>.</li>
+      <li>Send any message to your new bot, then visit <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code> in a browser to find the <strong>chat ID</strong>.</li>
+      <li>Set <code>TELEGRAM_BOT_TOKEN</code> and <code>TELEGRAM_CHAT_ID</code> in <code>.env</code>.</li>
+    </ol>
+    <h3>Rule options</h3>
+    <table><thead><tr><th>Key</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>type</code></td><td>Yes</td><td>Must be <code>telegram</code></td></tr>
+        <tr><td><code>message</code></td><td>No</td><td>Caption sent with the file</td></tr>
+      </tbody>
+    </table>
+
+    <!-- Zoom ────────────────────────────────────────────────────── -->
+    <h2 id="handler-zoom">Handler: Zoom</h2>
+    <p>Shares files in a Zoom Chat channel via the <a href="https://developers.zoom.us/docs/api/" target="_blank">Zoom Server-to-Server OAuth API</a>.</p>
+    <h3>Setup</h3>
+    <ol class="steps">
+      <li>Go to the <a href="https://marketplace.zoom.us/" target="_blank">Zoom App Marketplace</a> → <strong>Develop → Build App → Server-to-Server OAuth</strong>.</li>
+      <li>Add scopes: <code>chat_message:write</code>, <code>chat_file:write</code>.</li>
+      <li>Activate the app and copy <strong>Account ID</strong>, <strong>Client ID</strong>, and <strong>Client Secret</strong>.</li>
+      <li>Find the target <strong>Chat Channel ID</strong> via the Zoom API (<code>GET /chat/users/me/channels</code>).</li>
+      <li>Set all four values in <code>.env</code>.</li>
+    </ol>
+    <h3>Rule options</h3>
+    <table><thead><tr><th>Key</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>type</code></td><td>Yes</td><td>Must be <code>zoom</code></td></tr>
+        <tr><td><code>message</code></td><td>No</td><td>Companion text message</td></tr>
+      </tbody>
+    </table>
+
+    <!-- OneDrive ────────────────────────────────────────────────── -->
+    <h2 id="handler-onedrive">Handler: OneDrive</h2>
+    <p>Copies files to your local OneDrive sync folder. OneDrive is built into Windows and handles the cloud upload.</p>
+    <h3>Setup</h3>
+    <ol class="steps">
+      <li>OneDrive is pre-installed on Windows. Sign in if you haven't already.</li>
+      <li>Choose or create a subfolder (e.g. <code>OneDrive\Uploads</code>).</li>
+      <li>Set <code>ONEDRIVE_SYNC_FOLDER</code> in <code>.env</code> to the full local path.</li>
+    </ol>
+    <div class="callout">
+      <div class="label">💡 No API credentials needed</div>
+      OneDrive syncs automatically via the built-in Windows client.
+    </div>
+    <h3>Rule options</h3>
+    <table><thead><tr><th>Key</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody><tr><td><code>type</code></td><td>Yes</td><td>Must be <code>onedrive</code></td></tr></tbody>
+    </table>
+
+    <!-- Box ──────────────────────────────────────────────────────── -->
+    <h2 id="handler-box">Handler: Box</h2>
+    <p>Copies files to your local Box Drive sync folder. The desktop client handles the cloud upload.</p>
+    <h3>Setup</h3>
+    <ol class="steps">
+      <li>Install <a href="https://www.box.com/resources/downloads" target="_blank">Box Drive</a> and sign in.</li>
+      <li>Choose or create a subfolder (e.g. <code>Box\Uploads</code>).</li>
+      <li>Set <code>BOX_SYNC_FOLDER</code> in <code>.env</code> to the full local path.</li>
+    </ol>
+    <div class="callout">
+      <div class="label">💡 No API credentials needed</div>
+      Box Drive syncs automatically — no JWT config or developer console setup required.
+    </div>
+    <h3>Rule options</h3>
+    <table><thead><tr><th>Key</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody><tr><td><code>type</code></td><td>Yes</td><td>Must be <code>box</code></td></tr></tbody>
+    </table>
+
+    <!-- Local Copy ──────────────────────────────────────────────── -->
+    <h2 id="handler-local">Handler: Local / Network Copy</h2>
+    <p>Copies files to another folder on the same machine or a network-mounted share.</p>
+    <h3>Setup</h3>
+    <ol class="steps">
+      <li>Set <code>LOCAL_COPY_DEST</code> in <code>.env</code> to the target path (e.g. <code>D:\Backups</code> or <code>\\server\share</code>).</li>
+      <li>The destination folder is created automatically.</li>
+    </ol>
+    <h3>Rule options</h3>
+    <table><thead><tr><th>Key</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody><tr><td><code>type</code></td><td>Yes</td><td>Must be <code>local_copy</code></td></tr></tbody>
+    </table>
+
+    <!-- SFTP ─────────────────────────────────────────────────────── -->
+    <h2 id="handler-sftp">Handler: SFTP</h2>
+    <p>Uploads files to a remote server over SSH/SFTP. Supports password and private-key authentication.</p>
+    <h3>Setup</h3>
+    <ol class="steps">
+      <li>Set <code>SFTP_HOST</code>, <code>SFTP_PORT</code>, <code>SFTP_USERNAME</code> in <code>.env</code>.</li>
+      <li>Provide <strong>either</strong> <code>SFTP_PASSWORD</code> or <code>SFTP_PRIVATE_KEY</code>.</li>
+      <li>Set <code>SFTP_REMOTE_DIR</code> to the remote target directory.</li>
+    </ol>
+    <h3>Rule options</h3>
+    <table><thead><tr><th>Key</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody><tr><td><code>type</code></td><td>Yes</td><td>Must be <code>sftp</code></td></tr></tbody>
+    </table>
+
+    <!-- WeTransfer ────────────────────────────────────────────────── -->
+    <h2 id="handler-wetransfer">Handler: WeTransfer</h2>
+    <p>Automates the WeTransfer web UI via <a href="https://playwright.dev/python/" target="_blank">Playwright</a> to upload a file and email a download link to the configured recipient. WeTransfer requires email verification — the handler auto-fetches the code via <a href="https://www.mailslurp.com/" target="_blank">MailSlurp</a>.</p>
+    <h3>Setup</h3>
+    <ol class="steps">
+      <li>Install Playwright browsers after <code>pip install</code>:
+        <pre><code>python -m playwright install chromium</code></pre>
+      </li>
+      <li>Create a free <a href="https://app.mailslurp.com/" target="_blank">MailSlurp</a> account and create an inbox. Copy the <strong>API Key</strong> and the inbox <strong>email address</strong>.</li>
+      <li>Set <code>WETRANSFER_SENDER_EMAIL</code> to the MailSlurp inbox email (e.g. <code>monitor@mailslurp.biz</code>).</li>
+      <li>Set <code>WETRANSFER_RECIPIENT_EMAIL</code> — who receives the file (can be the same MailSlurp address).</li>
+      <li>Set <code>MAILSLURP_API_KEY</code> — allows the handler to auto-fetch the WeTransfer verification code.</li>
+      <li>(Optional) Set <code>WETRANSFER_HEADLESS=false</code> to watch the browser during debugging.</li>
+    </ol>
+    <div class="callout warn">
+      <div class="label">⚠️ Email Verification</div>
+      WeTransfer requires a verification code sent to the sender's email. The handler uses MailSlurp to fetch this code automatically. Without <code>MAILSLURP_API_KEY</code>, the transfer will fail.
+    </div>
+    <h3>Rule options</h3>
+    <table><thead><tr><th>Key</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>type</code></td><td>Yes</td><td>Must be <code>wetransfer</code></td></tr>
+        <tr><td><code>message</code></td><td>No</td><td>Transfer description / message text</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ═══════════ ADVANCED ════════════════════════════════════════ -->
+
+    <!-- Custom Handler
+    <h2 id="custom-handler">Adding a Custom Handler</h2>
+    <ol class="steps">
+      <li>
+        <strong>Create the handler</strong> — e.g. <code>handlers/my_handler.py</code>
+        <pre><code><span class="kw">from</span> .base <span class="kw">import</span> BaseHandler
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="kw">class</span> <span class="var">MyHandler</span>(BaseHandler):
+    name = <span class="str">"my_handler"</span>
+
+    <span class="kw">def</span> <span class="var">validate_credentials</span>(self) -> bool:
+        ...
+
+    <span class="kw">def</span> <span class="var">transfer</span>(self, file_path: Path) -> None:
+        ...</code></pre>
+      </li>
+      <li><strong>Register</strong> in <code>handlers/__init__.py</code>:
+        <pre><code>HANDLER_MAP[<span class="str">"my_handler"</span>] = MyHandler</code></pre>
+      </li>
+      <li><strong>Add env vars</strong> to <code>.env</code> for credentials.</li>
+      <li><strong>Reference</strong> in <code>config.yaml</code>:
+        <pre><code>- <span class="var">type</span>: <span class="str">my_handler</span></code></pre>
+      </li>
+    </ol>
+
+    <!-- CLI ──────────────────────────────────────────────────────── -->
+    <h2 id="cli">CLI Options</h2>
+    <pre><span class="lang-label">powershell</span><code>python main.py --help</code></pre>
+    <table>
+      <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--config</code></td><td><code>./config.yaml</code></td><td>Routing rules file</td></tr>
+        <tr><td><code>--env</code></td><td><code>./.env</code></td><td>Environment file</td></tr>
+      </tbody>
+    </table>
+    <pre><span class="lang-label">powershell</span><code>python main.py --config C:\configs\prod.yaml --env C:\configs\prod.env</code></pre>
+
+    <!-- Troubleshooting ─────────────────────────────────────────── -->
+    <h2 id="troubleshooting">Troubleshooting</h2>
+
+    <h3>Nothing happens when I drop a file</h3>
+    <ul style="margin:6px 0 12px 20px;">
+      <li>Verify you see <em>"Watching folder: …"</em> in the console.</li>
+      <li>Confirm the file is going into the correct <code>WATCH_FOLDER</code>.</li>
+      <li>Set <code>LOG_LEVEL=DEBUG</code> in <code>.env</code> for verbose output.</li>
+    </ul>
+
+    <h3>"handler has invalid credentials – skipping it"</h3>
+    <div class="callout warn">
+      <div class="label">⚠️</div>
+      Required env vars for that handler are missing. Check <code>.env</code> against the table above.
+    </div>
+
+    <h3>Slack: <code>not_in_channel</code></h3>
+    <p>Invite the bot: <code>/invite @YourBotName</code> in the target channel.</p>
+
+    <h3>Teams: <code>401 Unauthorized</code></h3>
+    <p>Ensure admin consent was granted for the API permissions in Azure AD.</p>
+
+    <h3>WhatsApp: File not received</h3>
+    <p><code>WHATSAPP_MEDIA_BASE_URL</code> must be publicly reachable. Test by opening the URL in a browser.</p>
+
+    <h3>Telegram: <code>chat not found</code></h3>
+    <p>You must message the bot first so it has a chat ID. For groups, add the bot to the group and use the group chat ID (usually a negative number).</p>
+
+    <h3>Zoom: <code>403 Forbidden</code></h3>
+    <p>Verify the app has the <code>chat_message:write</code> and <code>chat_file:write</code> scopes and is activated.</p>
+
+    <h3>Cloud storage: files not syncing</h3>
+    <p>Verify the desktop client (OneDrive / Box Drive) is running and signed in. Confirm the sync folder path in <code>.env</code> matches the actual folder the client is syncing.</p>
+
+    <h3>SFTP: Connection refused</h3>
+    <ul style="margin:6px 0 12px 20px;">
+      <li>Confirm <code>SFTP_HOST</code> and <code>SFTP_PORT</code>.</li>
+      <li>If using a private key, ensure it's OpenSSH/PEM format.</li>
+    </ul>
+
+    <h3>WeTransfer: upload fails or times out</h3>
+    <ul style="margin:6px 0 12px 20px;">
+      <li>Set <code>WETRANSFER_HEADLESS=false</code> and run again to see what the browser is doing.</li>
+      <li>WeTransfer may show a cookie consent or paywall — the handler tries to dismiss these, but UI changes may break selectors.</li>
+      <li>Ensure <code>playwright install chromium</code> has been run after installing requirements.</li>
+    </ul>
+
+    <!-- Project Structure ───────────────────────────────────────── -->
+    <h2>Project Structure</h2>
+    <pre><code>file_transfer/
+├── .env.example                <span class="cm"># credential template</span>
+├── .env                        <span class="cm"># your credentials (git-ignored)</span>
+├── config.yaml                 <span class="cm"># routing rules</span>
+├── requirements.txt            <span class="cm"># pip dependencies</span>
+├── main.py                     <span class="cm"># entry point</span>
+├── watcher.py                  <span class="cm"># folder monitor (watchdog)</span>
+└── handlers/
+    ├── __init__.py              <span class="cm"># handler registry</span>
+    ├── base.py                  <span class="cm"># abstract base class</span>
+    ├── slack_handler.py         <span class="cm"># Slack</span>
+    ├── teams_handler.py         <span class="cm"># Microsoft Teams</span>
+    ├── whatsapp_handler.py      <span class="cm"># WhatsApp (Twilio)</span>
+    ├── telegram_handler.py      <span class="cm"># Telegram</span>
+    ├── zoom_handler.py          <span class="cm"># Zoom</span>
+    ├── onedrive_handler.py      <span class="cm"># OneDrive</span>
+    ├── box_handler.py           <span class="cm"># Box</span>
+    ├── local_copy_handler.py    <span class="cm"># local / network copy</span>
+    ├── sftp_handler.py          <span class="cm"># SFTP upload</span>
+    └── wetransfer_handler.py    <span class="cm"># WeTransfer (Playwright)</span></code></pre>
+
+    <footer>File Transfer Automation — 10 handlers, one inbox.</footer>
+
+  </main>
+</div>
+</body>
+</html>

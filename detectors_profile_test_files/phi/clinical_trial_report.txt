@@ -1,0 +1,59 @@
+CLINICAL TRIAL INTERIM REPORT
+Study: CARD-2025-Phase3
+Sponsor: Meridian Pharmaceuticals Inc.
+Principal Investigator NPI: 1598043226
+Date: November 2025
+==========================================
+
+Study Overview:
+  Protocol: Evaluation of Compound MRD-4521
+  Indication: ICD-9 414.01 - Coronary atherosclerosis of native vessel
+  Secondary Endpoint: ICD-9 250.00 - Diabetes mellitus type II
+  Tertiary Endpoint: ICD-9 401.1 - Essential hypertension
+
+Investigator Sites:
+
+  Site 001 - Boston Medical Center
+    Principal Investigator NPI: 1386825446
+    Sub-Investigator NPI: 1780097709
+    Pharmacy NPI: 1104521467
+    Enrolled: 45 patients
+
+  Site 002 - Cleveland Clinic
+    Principal Investigator NPI: 1215172754
+    Sub-Investigator NPI: 1124253174
+    Pharmacy NPI: 1639467178
+    Enrolled: 38 patients
+
+  Site 003 - Mayo Clinic
+    Principal Investigator NPI: 1568697530
+    Sub-Investigator NPI: 1578951794
+    Pharmacy NPI: 1578281382
+    Enrolled: 52 patients
+
+Study Medications:
+  Active Drug: NDC 0002-1433-80 (Compound MRD-4521 500mg)
+  Placebo: NDC 50090-3961-0
+
+Adverse Events Summary:
+  Patient 001-023: ICD-9 787.01 - Nausea with vomiting
+  Patient 002-015: ICD-9 780.79 - Malaise and fatigue
+  Patient 003-041: ICD-9 724.2 - Lumbago (lower back pain)
+  Patient 001-008: ICD-9 786.50 - Chest pain, unspecified
+
+Procedures Performed:
+  CPT 93000 - Electrocardiogram
+  CPT 80053 - Comprehensive metabolic panel
+  HCPCS 70012 - Radiologic examination
+  CPT 99214 - Office visit, established patient, moderate complexity
+
+Concomitant Medications Tracked:
+  Atorvastatin - NDC 0002-1433-80
+  Metoprolol - National Drug Code 50090-3961-0
+
+Data Safety Monitoring Board:
+  Chair NPI: 1538304092
+  Statistician NPI: 1679909725
+
+CONFIDENTIAL: Contains protected health information per HIPAA.
+Distribution limited to authorized study personnel.

@@ -1,0 +1,40 @@
+QUARTERLY INVESTMENT PORTFOLIO SUMMARY
+Client: Westbrook Family Trust
+Advisor: Sarah Chen, CFA
+Period: Q3 2025
+==========================================
+
+Account Details:
+  Primary Account ABA Routing Number: 021000021
+  Trust Account routing 325081403
+  International Account IBAN: GB29 NWBK 6016 1331 9268 19
+
+Holdings Summary:
+
+  US Equities:
+    CUSIP 037833100 - Apple Inc. - 5,000 shares @ $178.25
+    CUSIP 594918104 - Microsoft Corp. - 3,200 shares @ $332.10
+    CUSIP 02079K107 - Alphabet Inc. Class A - 1,500 shares @ $138.45
+    CUSIP 303075105 - Facebook/Meta - 2,800 shares @ $312.90
+    CUSIP 011659109 - Air Products - 800 shares @ $295.60
+    CUSIP 931142103 - Walmart Inc. - 4,100 shares @ $165.30
+    CUSIP 02079K305 - Alphabet Inc. Class C - 1,200 shares @ $139.80
+    CUSIP 17275R102 - Cisco Systems - 6,500 shares @ $52.15
+
+  International Holdings:
+    European Bond Fund - IBAN: NL91 ABNA 0417 1643 00
+    Swiss Fixed Income - IBAN: CH93 0076 2011 6238 5295 7
+    Albanian Growth Fund - IBAN: AL47212110090000000235698741
+
+  Credit Facility:
+    Corporate credit card on file: Visa 4917484589897107
+    Backup card number 4001919257537193
+
+  Wire Instructions for Distributions:
+    Primary ABA routing 026045447
+    Secondary ABA# 122238200
+
+Total Portfolio Value: $14,892,340.00
+Next Review Date: January 15, 2026
+
+CONFIDENTIAL - For authorized recipients only.

@@ -1,0 +1,75 @@
+EMPLOYEE RECORDS EXPORT
+HR Department - Annual Audit
+Company: GlobalTech Solutions Inc.
+Export Date: November 15, 2025
+==========================================
+
+Employee: Thompson, Margaret E.
+  Employee ID: EMP-10234
+  Social Security SSN: 252-03-5711
+  Date of Birth: birthday 03/15/1962
+  Phone: +1 (408) 555-0123
+  Email: m.thompson@globaltech.com
+  Address: 1755 S St Louis Ave, Chicago, IL 60623
+  UK National Insurance NINO: CM474308D
+
+Employee: Müller, Hans-Peter
+  Employee ID: EMP-10567
+  Social Security SSN: 678-21-2890
+  DOB: birthdate 07/22/1978
+  Phone: +1-650-555-0199
+  Email: h.muller@globaltech.com
+  Address: 2530 NW Grand Blvd, Oklahoma City, OK 73116
+  UK insurance number: NH674559D
+
+Employee: Dubois, Marie-Claire
+  Employee ID: EMP-10891
+  Social Security SSN: 091-93-1857
+  Date of birth: birthday 1990/05/02
+  Phone: +1 (212) 555-0147
+  Email: m.dubois@globaltech.com
+  Address: 200 St Vincent Street, Glasgow G2 5SG
+  National insurance: LC 41 34 37 B
+
+Employee: Petrov, Alexei V.
+  Employee ID: EMP-11023
+  SSN: 798-56-7812
+  DOB: birthdate 11/30/1985
+  Phone: +1 (312) 555-0234
+  Email: a.petrov@globaltech.com
+  UK NIN: WH.51.67.85-B
+
+Employee: Nakamura, Yuki
+  Employee ID: EMP-11245
+  Social Security: 229-25-6397
+  Birthday: 1988/09/14
+  Phone: +1 (415) 555-0345
+  Email: y.nakamura@globaltech.com
+  UK insurance: GS-65-93-57-A
+
+Employee: O'Sullivan, Patrick
+  Employee ID: EMP-11467
+  Soc sec: 149-98-3386
+  DOB: birthdate 04/08/1975
+  Phone: +1 (617) 555-0456
+  Email: p.osullivan@globaltech.com
+  Nationalinsurance: RN374778D
+
+Employee: Santos, Maria L.
+  Employee ID: EMP-11689
+  SSA: 525-87-5195
+  Birthday: 1992/12/03
+  Phone: +1 (305) 555-0567
+  Email: m.santos@globaltech.com
+  UK NIN: XY 59 31 44 A
+
+Employee: Kim, David J.
+  Employee ID: EMP-11901
+  Social security: 259-71-3125
+  DOB: birthdate 06/17/1980
+  Phone: +1 (206) 555-0678
+  Email: d.kim@globaltech.com
+  Insurance number: MM-32-11-14-B
+
+CONFIDENTIAL: Contains personally identifiable information.
+Handle in accordance with GDPR and local privacy regulations.

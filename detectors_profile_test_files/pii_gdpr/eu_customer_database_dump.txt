@@ -1,0 +1,89 @@
+EU CUSTOMER DATABASE EXPORT
+System: CRM v5.2
+Export Date: 2025-11-20
+GDPR Data Processing Reference: DPR-2025-0892
+==========================================
+
+Customer ID: EU-40231
+  Name: Friedrich Weber
+  Email: f.weber@example.de
+  Phone: +1 (408) 555-0123
+  Address: 1755 S St Louis Ave, Chicago, IL 60623
+  UK taxpayer reference: 7725762244K
+  National insurance NINO: PC 41 75 18 C
+  Social Security SSN: 089-34-2019
+
+Customer ID: EU-40232
+  Name: Sophie Laurent
+  Email: s.laurent@example.fr
+  Phone: +1-650-555-0199
+  Address: 2530 NW Grand Blvd, Oklahoma City, OK 73116
+  UK tax reference: 3758653578809A
+  Nationalinsurance: YA 93 47 57 D
+  Soc sec: 132-97-8693
+
+Customer ID: EU-40233
+  Name: Marco Rossi
+  Email: m.rossi@example.it
+  Phone: +1 (212) 555-0147
+  Address: 200 St Vincent Street, Glasgow G2 5SG
+  UK UTR: k0641508078579
+  Insurance: RE.16.29.33-D
+  Social Security: 199-82-2552
+
+Customer ID: EU-40234
+  Name: Anna Kowalski
+  Email: a.kowalski@example.pl
+  Phone: +1 (312) 555-0234
+  UK taxref: k1508078579
+  NIN: HA 534224 D
+  SSN: 538-82-0835
+
+Customer ID: EU-40235
+  Name: Erik Johansson
+  Email: e.johansson@example.se
+  Phone: +1 (415) 555-0345
+  UK tax reference: 5998653578809
+  Nationalinsurance: RW-20-63-88-D
+  Social security: 131-17-8194
+
+Customer ID: EU-40236
+  Name: Helena Papadopoulos
+  Email: h.papadopoulos@example.gr
+  Phone: +1 (617) 555-0456
+  UK taxpayer: 62335947283408
+  Insurance: ZB243159A
+  Soc sec: 337-96-6055
+
+Customer ID: EU-40237
+  Name: Carlos Fernandez
+  Email: c.fernandez@example.es
+  Phone: +1 (305) 555-0567
+  NIN: NJ597569D
+  Social-security: 373-65-9924
+
+Customer ID: EU-40238
+  Name: Ingrid Nielsen
+  Email: i.nielsen@example.dk
+  Phone: +1 (206) 555-0678
+  Nationalinsurance: RT.38.91.33-D
+  SSA: 384-79-7782
+
+Customer ID: EU-40239
+  Name: Lukas Novak
+  Email: l.novak@example.cz
+  Phone: +1 (503) 555-0789
+  Insurance: WP-94-22-06-B
+  SSA: 564-18-2311
+
+Customer ID: EU-40240
+  Name: Beatrice Van den Berg
+  Email: b.vandenberg@example.nl
+  Phone: +1 (720) 555-0890
+  NIN: LT.27.16.09-C
+  Social security: 737-96-9651
+
+GDPR NOTICE: This data export is subject to EU General Data Protection
+Regulation. Processing lawful basis: Legitimate interest.
+Data subject rights: Access, rectification, erasure, portability.
+Data Protection Officer: dpo@company.eu

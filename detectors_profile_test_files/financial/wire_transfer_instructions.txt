@@ -1,0 +1,48 @@
+WIRE TRANSFER INSTRUCTIONS
+Meridian Capital Partners LLC
+Date: November 15, 2025
+Reference: WT-2025-4892
+==========================================
+
+Originator Information:
+  Account Holder: Meridian Capital Partners LLC
+  Bank: First National Bank
+  ABA Routing Number: 325081403
+  Account Number: 7823-4561-0092
+
+Beneficiary Information:
+  Beneficiary: Thornfield Industries GmbH
+  Bank: Deutsche Bank AG, Frankfurt
+  IBAN: GB29 NWBK 6016 1331 9268 19
+  SWIFT/BIC: DEUTDEFF
+
+Secondary Wire (EUR):
+  Beneficiary: Nordic Supply Chain AS
+  Bank: ABN AMRO, Amsterdam
+  IBAN: NL91 ABNA 0417 1643 00
+  ABA routing 026045447
+
+Third Wire (CHF):
+  Beneficiary: Alpine Consulting SA
+  Bank: UBS AG, Zurich
+  IBAN: CH93 0076 2011 6238 5295 7
+
+Securities Reference:
+  CUSIP 037833100 (Apple Inc. Common Stock)
+  CUSIP 594918104 (Microsoft Corp.)
+  CUSIP 02079K107 (Alphabet Inc. Class A)
+
+Payment Details:
+  Amount: USD 2,450,000.00
+  Purpose: Q4 Investment Settlement
+  Credit card payment backup: Visa card number 4263982640269299
+  Authorized by: James Richardson, CFO
+
+Additional Routing:
+  Intermediary bank ABA# 122238200
+  Correspondent routing number 021000021
+
+IBAN for Albanian subsidiary: AL47 2121 1009 0000 0002 3569 8741
+
+This document contains confidential financial information.
+Unauthorized distribution is strictly prohibited.

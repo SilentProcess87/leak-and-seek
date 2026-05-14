@@ -1,0 +1,89 @@
+QUARTERLY SECURITY AUDIT REPORT
+Q3 2025 - Internal Audit Division
+Classification: STRICTLY CONFIDENTIAL
+==========================================
+
+Section 1: Credential Exposure Findings
+
+During the Q3 security scan, the following credentials were
+discovered in unauthorized locations across production systems:
+
+  System admin password: MyS3cretP@ss
+  Database password: Adm1n!Secure
+  Legacy service password: T3st#Value9
+
+  Encrypted password hashes found in config files:
+    Password (bcrypt): $2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW
+    Password (argon2): $argon2id$v=19$m=65536,t=4,p=2$RZv5my1DCYpqxJzJ$4fXPG0kBZoEDlj/hASxh1OHkWP4bR7Y+xPWTN8NHKgw
+
+  Encoded password found in deployment scripts:
+    Password (base64): cGFzc3dvcmQxMjNBQkM=
+
+Section 2: Network Infrastructure Exposure
+
+  External-facing servers with exposed addresses:
+    Primary web server: 23.20.105.238
+    Secondary load balancer: 136.147.19.78
+    CDN endpoint: 225.251.9.90
+
+  Public subnet allocations found in documentation:
+    DMZ network: 45.33.32.0/24
+    Partner VPN range: 203.0.113.0/24
+
+  Internal network addresses discovered in shared documents:
+    Development server: 192.168.1.100
+    Staging database: 10.0.1.5
+    Build server: 172.16.50.10
+
+  Internal IP subnet configurations leaked:
+    Corporate LAN: 192.168.10.0/24
+    Engineering VLAN: 172.17.9.0/24
+
+  Network interface hardware mac address inventory:
+    Server NIC-01 MAC: 00:05:DE:54:E3:AA
+    Server NIC-02 MAC: 00:1A:2B:3C:4D:5E
+
+Section 3: Mobile Device Inventory
+
+  Corporate mobile phone SIM card details:
+    Executive phone ICCID: 8923440000000000003
+    Field device SIM: 8965880812100011146F
+
+Section 4: Physical Location Data
+
+  Office locations with street addresses:
+    Headquarters: 1755 S St Louis Ave
+    Regional office: 2530 NW Grand Blvd
+    Data center: 200 St Vincent Street
+
+Section 5: Vehicle Fleet Records
+
+  Company vehicle license plate numbers:
+    Fleet vehicle 1 plate number: BD51 SMR
+    Fleet vehicle 2 license plate: 7GBC368
+    Fleet vehicle 3 plate number: HH OL 7687
+
+Section 6: Employee Diversity Data
+
+  Religious belief demographics (anonymized survey):
+    Employee religious affiliation data:
+      Faith: Buddhism
+      Religious belief: Christianity
+      Religion: Islam
+
+  Political view survey results (confidential):
+    Employee political ideology responses:
+      Political view: Liberal
+      Political ideology: Conservative
+      Political view: Democratic Socialist
+
+Section 7: International Operations
+
+  Japan subsidiary corporate number: 5010401067252
+
+  UK electoral roll number records:
+    London office electoral roll: AB123
+    Manchester office electoral register: CDE4321
+
+Prepared by: Internal Audit Team
+Distribution: CISO, CTO, Legal Counsel only

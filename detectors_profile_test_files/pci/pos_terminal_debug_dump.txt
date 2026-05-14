@@ -1,0 +1,52 @@
+POS TERMINAL DEBUG DUMP
+Terminal ID: POS-STORE-042
+Location: Downtown Branch
+Dump Time: 2025-11-20 14:30:00 UTC
+Firmware: v3.8.1
+==========================================
+
+[14:30:01] Card swipe detected
+[14:30:01] Credit card magnetic stripe data: %B4263982640269299^MITCHELL/ROBERT^27121019845?
+[14:30:02] Visa credit card: 4263982640269299
+[14:30:02] Card expiry: 12/27
+[14:30:02] Credit card CVV entered: 847
+[14:30:03] Authorization request sent
+[14:30:04] Response: APPROVED Auth#: 847291
+
+[14:35:22] Chip card inserted
+[14:35:23] Mastercard credit card number: 5121212121212124
+[14:35:23] Card expiration date: 03/2028
+[14:35:23] Credit card CVC: 912
+[14:35:24] EMV transaction initiated
+[14:35:25] Response: APPROVED Auth#: 923104
+
+[14:42:15] Contactless tap detected
+[14:42:15] Amex card number: 378282246310005
+[14:42:16] Card exp: 09/26
+[14:42:16] Credit card CVV: 4521
+[14:42:17] NFC transaction processed
+[14:42:18] Response: APPROVED Auth#: 156782
+
+[14:50:33] Card swipe detected
+[14:50:33] Magnetic stripe credit card data: %B4917484589897107^OBRIEN/SARAH^27061019331?
+[14:50:34] Visa card number: 4917484589897107
+[14:50:34] CC expiry date: 06/27
+[14:50:34] Credit card CVV: 331
+[14:50:35] Response: APPROVED Auth#: 445623
+
+[14:58:10] Manual entry
+[14:58:11] Credit card number: 4001919257537193
+[14:58:11] Card expiration: 02/28
+[14:58:11] Credit card CVC: 556
+[14:58:12] Response: APPROVED Auth#: 778901
+
+[15:05:44] Card swipe detected
+[15:05:44] Credit card magnetic stripe: %B371449635398431^CHANG/MICHAEL^26111019783?
+[15:05:45] American Express card number: 371449635398431
+[15:05:45] Card expiry date: 11/26
+[15:05:45] Credit card CVV: 7834
+[15:05:46] Response: DECLINED - Over limit
+
+ALERT: Debug logging with full card data is a PCI violation.
+Disable debug mode in production immediately.
+Terminal must be re-certified after this dump is reviewed.

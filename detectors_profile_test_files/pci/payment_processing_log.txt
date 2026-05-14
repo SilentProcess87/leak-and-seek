@@ -1,0 +1,62 @@
+PAYMENT PROCESSING LOG
+System: PaymentGateway v4.2
+Date: 2025-11-20
+Environment: Production
+==========================================
+
+Transaction ID: TXN-20251120-001
+  Timestamp: 2025-11-20 09:15:23 UTC
+  Visa credit card number: 4263982640269299
+  Card expiry date: 12/27
+  Credit card CVV: 847
+  Cardholder: Robert J. Mitchell
+  Amount: $1,249.99
+  Status: APPROVED
+
+Transaction ID: TXN-20251120-002
+  Timestamp: 2025-11-20 09:22:45 UTC
+  Mastercard credit card number: 5121212121212124
+  Card expiration: 03/2028
+  Credit card CVC: 912
+  Cardholder: Elena Vasquez
+  Amount: $567.50
+  Status: APPROVED
+
+Transaction ID: TXN-20251120-003
+  Timestamp: 2025-11-20 09:31:07 UTC
+  American Express card number: 378282246310005
+  Card exp: 09/26
+  Credit card CVV: 4521
+  Cardholder: David Kim
+  Amount: $3,200.00
+  Status: APPROVED
+
+Transaction ID: TXN-20251120-004
+  Timestamp: 2025-11-20 09:45:12 UTC
+  Visa credit card: 4917484589897107
+  CC expiration date: 06/27
+  Credit card CVV: 331
+  Cardholder: Sarah O'Brien
+  Amount: $89.95
+  Status: APPROVED
+
+Transaction ID: TXN-20251120-005
+  Timestamp: 2025-11-20 10:02:33 UTC
+  Amex card number: 371449635398431
+  Card expiry: 11/26
+  Credit card CVC: 7834
+  Cardholder: Michael Chang
+  Amount: $4,750.00
+  Status: DECLINED - Insufficient funds
+
+Transaction ID: TXN-20251120-006
+  Timestamp: 2025-11-20 10:15:48 UTC
+  Visa card number: 4001919257537193
+  CC expiry date: 02/28
+  Credit card CVV: 556
+  Cardholder: Jennifer Walsh
+  Amount: $199.00
+  Status: APPROVED
+
+WARNING: This log contains PCI-regulated data.
+Retention period: 90 days. Encrypt at rest.

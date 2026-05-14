@@ -1,0 +1,78 @@
+PHARMACY PRESCRIPTION LOG
+MedFirst Pharmacy #2847
+NPI: 1609396290
+Date: November 20, 2025
+==========================================
+
+Rx #: 7845231
+  Patient: William Chen
+  Prescriber NPI: 1538304092
+  Diagnosis: ICD-9 250.00 - Diabetes mellitus
+  Medication: Metformin 1000mg
+  NDC 0002-1433-80
+  Qty: 90 tablets
+  Refills: 3
+  Dispensing Pharmacy NPI: 1609396290
+
+Rx #: 7845232
+  Patient: Dorothy Williams
+  Prescriber NPI: 1679909725
+  Diagnosis: ICD-9 401.1 - Hypertension
+  Medication: Amlodipine 5mg
+  NDC 50090-3961-0
+  Qty: 30 tablets
+  Refills: 5
+  Dispensing Pharmacy NPI: 1609396290
+
+Rx #: 7845233
+  Patient: James Rodriguez
+  Prescriber NPI: 1679803654
+  Diagnosis: ICD-9 272.0 - Hypercholesterolemia
+  Medication: Rosuvastatin 20mg
+  National Drug Code 12345-678-90
+  Qty: 30 tablets
+  Refills: 11
+
+Rx #: 7845234
+  Patient: Susan Park
+  Prescriber NPI: 1841365384
+  Diagnosis: ICD-9 311 - Depressive disorder
+  Medication: Sertraline 50mg
+  NDC 0002-1433-80
+  Qty: 30 tablets
+  Refills: 2
+
+Rx #: 7845235
+  Patient: Michael O'Brien
+  Prescriber NPI: 1578954186
+  Diagnosis: ICD-9 493.90 - Asthma, unspecified
+  Medication: Albuterol Inhaler
+  NDC 50090-3961-0
+  Qty: 1 inhaler
+  Refills: 3
+
+Rx #: 7845236
+  Patient: Lisa Nakamura
+  Prescriber NPI: 1598043226
+  Diagnosis: ICD-9 724.2 - Lumbago
+  Procedure ordered: CPT 97110 - Therapeutic exercises
+  HCPCS A2002 - Medical supplies
+  Medication: Cyclobenzaprine 10mg
+  NDC 0002-1433-80
+  Qty: 21 tablets
+  Refills: 0
+
+Rx #: 7845237
+  Patient: Ahmed Hassan
+  Prescriber NPI: 1386825446
+  Diagnosis: ICD-9 V70.0 - Routine examination
+  Lab ordered at NPI: 1780097709
+  Procedure: CPT 80053 - Comprehensive metabolic panel
+
+Daily Summary:
+  Total Prescriptions: 7
+  Controlled Substances: 0
+  Insurance Claims Submitted: 7
+  Pharmacy NPI verified: 1609396290
+
+HIPAA NOTICE: Protected health information - handle per policy.

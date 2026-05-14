@@ -1,0 +1,43 @@
+Developer Onboarding - Environment Setup Guide
+Author: DevOps Team
+Last Updated: 2025-10-22
+================================================
+
+1. Cloud Access Keys
+   After provisioning, you will receive your AWS credentials:
+   - AWS Access Key ID: AKIAJ3ZUWTQBFNRECXQ7
+   - AWS Secret Access Key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYzk9hHw3qpL
+
+2. API Keys for Services
+   Google Maps API Key: AIzaSyfmgINU6LrpWa1S7YOMfVOle3AXbUYf8j2
+   Google Cloud API Key: AIzaSyOaAUEmGQlY7cFn5SBWjZsNJBbVEMguFmK
+   Google Translate API Key: AIzaSyTITIBC1kV1lNNsUTjNT17ffjzDDDthAej
+
+3. Payment Gateway
+   Stripe API Key for staging: sk_live_BPBl1IiFZ6d5V6rHsdJkAam7
+   Stripe Restricted Key: rk_live_N6CfO59GoPy3BY1C3Fo6vnXA
+   Stripe Publishable Key: pk_test_MjYq6oD2cVwa1uQJZMo0DBhR
+
+4. Version Control
+   GitHub Personal Access Token: ghp_xYzAbCdEfGhIjKlMnOpQrStUvWxYz123456789a
+
+5. Communication Tools
+   Slack Bot Token: xoxb-98765432101-12345678901-xYzAbCdEfGhIjKlMn
+
+6. AI Services
+   OpenAI API key: sk-kWAQH4ifeiVxDNTuYs10dPcTWMJEo21j3mB
+
+7. Internal Services
+   FTP upload server: ftp://deployer:D3pl0y2025!@ftp.staging.internal/releases
+
+8. Database Access
+   Staging database connection dbhost=staging-rds.us-east-1.rds.internal:3306 username=dev_user password=DevStag1ng2025!
+
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEAyHXxncysNkDxbZ9fVQfRS7WUgctfjGatkSsrimqeldU5V7W5
+fgEgRtd2Pe4NB0ZdE4YqHBynK5yUm0L7z9FGrpNsV07a8RohOCfPREXy2s4n1Swu
+2atQingYD7O9+jFjmpGq3I7FwcJjB/t+GME0FOMVvShglyZONoBsUq4g9VAr2ON3
+CFzTooM7ahXFXUgdU4rUTsuQbTupgK35IRT+Y6Nz88vpKwJzPVm1Egk=
+-----END RSA PRIVATE KEY-----
+
+IMPORTANT: Store all credentials in a secure vault. Never commit to source control.

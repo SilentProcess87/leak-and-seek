@@ -1,0 +1,85 @@
+HR ONBOARDING CHECKLIST
+New Hire Processing Form
+Company: Atlantic Digital Services
+==========================================
+
+New Hire: Rebecca Chen
+  Position: Senior Software Engineer
+  Start Date: December 1, 2025
+  
+  Identity Verification:
+    Social Security SSN: 089-34-2019
+    US Passport Number: 301268645
+    Date of birth: birthday 1990/05/02
+    
+  Contact Information:
+    Email: r.chen@atlanticdigital.com
+    Phone: +1 (408) 555-0123
+    Address: 1755 S St Louis Ave, Chicago, IL 60623
+
+  Tax Information:
+    EIN employer identification: 95-1234567
+    UK tax reference: 7725762244K
+
+  International Assignment Details:
+    UK National Insurance NINO: CM474308D
+    UK taxpayer reference: 3758653578809A
+
+---
+
+New Hire: Thomas Andersen
+  Position: Data Analyst
+  Start Date: December 15, 2025
+  
+  Identity Verification:
+    SSN social security: 678-21-2890
+    Date of birth: DOB 12/25/1990
+    
+  Contact Information:
+    Email: t.andersen@atlanticdigital.com
+    Phone: +1-650-555-0199
+    Address: 2530 NW Grand Blvd, Oklahoma City, OK 73116
+
+  Tax Information:
+    Federal tax EIN: 01-2345678
+
+  UK Assignment:
+    Insurance number NINO: NH674559D
+
+---
+
+New Hire: Priya Sharma
+  Position: Product Manager
+  Start Date: January 6, 2026
+  
+  Identity Verification:
+    Social Security SSN: 091-93-1857
+    Birthday: birthdate 03-15-1985
+    
+  Contact Information:
+    Email: p.sharma@atlanticdigital.com
+    Phone: +1 (212) 555-0147
+    Address: 200 St Vincent Street, Glasgow G2 5SG
+
+  Tax Information:
+    Employer identification EIN: 12-3456789
+
+  UK Assignment:
+    National insurance: LC 41 34 37 B
+    UK UTR tax reference: k0641508078579
+
+---
+
+Checklist Items:
+  [ ] Background check completed
+  [ ] I-9 verification
+  [ ] Tax forms (W-4) submitted
+  [ ] Benefits enrollment
+  [ ] IT equipment provisioned
+  [ ] Building access badge issued
+  [ ] Emergency contact collected
+  [ ] Direct deposit setup (SSN verified)
+  [ ] GDPR consent form signed
+
+CONFIDENTIAL: Contains sensitive personal information.
+Store securely per data protection policy.

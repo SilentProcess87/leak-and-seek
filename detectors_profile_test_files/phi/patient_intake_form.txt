@@ -1,0 +1,51 @@
+PATIENT INTAKE FORM
+Riverside Medical Center
+Date: November 15, 2025
+==========================================
+
+Patient Information:
+  Full Name: Margaret Elizabeth Thompson
+  Date of Birth: 03/15/1962
+  SSN: 252-03-5711
+  Phone: +1 (408) 555-0123
+  Address: 1755 S St Louis Ave, Chicago, IL 60623
+  Email: m.thompson@email.com
+
+Insurance Information:
+  Provider: BlueCross BlueShield
+  NPI of Primary Care Physician: 1538304092
+  NPI of Referring Physician: 1679909725
+  Group Number: BCB-445892
+
+Medical History:
+  Primary Diagnosis ICD-9 250.00 - Diabetes mellitus type II
+  Secondary Diagnosis ICD-9 401.1 - Essential hypertension, benign
+  Previous Diagnosis ICD-9 V70.0 - Routine general medical examination
+
+Current Medications:
+  Metformin 500mg - NDC 0002-1433-80
+  Lisinopril 10mg - NDC 50090-3961-0
+  Aspirin 81mg - National Drug Code 12345-678-90
+
+Procedures Scheduled:
+  CPT 99213 - Office visit, established patient
+  HCPCS A2002 - Wound care supplies
+
+Attending Physician:
+  Dr. James Wilson, MD
+  NPI 1609396290
+  DEA Registration: Active
+
+Lab Orders:
+  NPI of ordering provider: 1679803654
+  NPI of performing lab: 1841365384
+
+Pharmacy:
+  Walgreens #4521
+  NPI 1578954186
+
+Emergency Contact:
+  Robert Thompson (Spouse)
+  Phone: +1 (408) 555-0456
+
+HIPAA Notice: This document contains protected health information.

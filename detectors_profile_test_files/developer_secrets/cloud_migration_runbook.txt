@@ -1,0 +1,54 @@
+Cloud Migration Runbook - Phase 3
+Project: Legacy to Cloud Migration
+Date: 2025-12-01
+Classification: Internal Use Only
+==========================================
+
+Step 1: Verify Source Credentials
+---------------------------------
+Source AWS Access Key ID: ASIAIOSFODNN7WKQR5PX
+Source AWS Secret Access Key: 7pMz9Kx2vNqW4jRtYhBn5cFgDsAeUiOlPmXwZy3k
+
+Step 2: Configure Target Environment
+-------------------------------------
+Target Google API Key: AIzaSyGB58KzkRycQw0EIjQPpIoFUNkcNrC91ZF
+Monitoring Google API Key: AIzaSyapPI0rSCYFcll9u-2IvcLrJYD5QkssVOm
+
+Step 3: Payment Service Migration
+----------------------------------
+Old Stripe API Key: sk_live_X8EA8LWLLpchOZhreiV2Zpv9
+New Stripe API Key: pk_live_O5X2S33E3DIGQ0dryshQxPtb
+
+Step 4: CI/CD Pipeline Tokens
+------------------------------
+GitHub deployment token: ghp_mNoPqRsTuVwXyZ0123456789aBcDeFgHiJkLm01
+
+Step 5: Messaging Integration
+------------------------------
+Slack Bot Token for alerts: xoxb-11223344556-99887766554-qWeRtYuIoPaSdFgH
+
+Step 6: AI Model Endpoints
+----------------------------
+OpenAI production key: sk-3VrmrDqOM6SUoL6Qnb3F20hmT0sySQBV
+
+Step 7: Legacy Database Migration
+----------------------------------
+Source database connection dbhost=legacy-oracle.corp.net:1521 username=migration_svc password=M1gr4t3Pr0d!
+
+Target database connection dbhost=cloud-postgres.internal:5432 username=cloud_admin password=Cl0udAdm1n2025!
+
+Step 8: File Transfer
+----------------------
+Legacy FTP server: ftp://ftpuser:L3g4cyFtp!@ftp.legacy.corp.net/exports
+
+Step 9: SSL Certificate
+-------------------------
+-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEA0Z3VS5JJcds3xfn/ygWyF8PbnGy0AHB7MhgHcTz6sE2I2yPB
+aFDrBz9vFqU4yPnMzXGJ8UAFSsKY3GKDQ8WbNPMPo7BxDkXsFnkRi4rNqdMBwXG
+Q5TT8crRmGxkBYLzaG3R8VfaKRgGxOHOEh2CEVKR8MZhkEqN5rSaEE8LQXG8YOz
+CFzTooM7ahXFXUgdU4rUTsuQbTupgK35IRT+Y6Nz88vpKwJzPVm1Egk=
+-----END RSA PRIVATE KEY-----
+
+Rollback Plan: If migration fails, revert to snapshot taken at T-0.
+Contact: infrastructure-team@company.com

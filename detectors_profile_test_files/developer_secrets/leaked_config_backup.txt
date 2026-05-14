@@ -1,0 +1,44 @@
+CONFIDENTIAL - Infrastructure Configuration Backup
+Date: 2025-11-15
+System: Production Environment
+=============================================
+
+AWS Configuration
+-----------------
+Region: us-east-1
+AWS Access Key ID: AKIASP2TPHJSQH3DKWVN
+AWS Secret Access Key: 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
+
+Google Cloud Platform
+---------------------
+Google API Key: AIzaSyL6jpvHhcIxkQwY0AsmH-aiPEOtrwPPJX8
+Secondary Google API Key: AIzaSyRe8pp48-1D7mwebAMZrJPJIk0cnmOmuKk
+
+Stripe Payment Integration
+---------------------------
+Stripe API Key (Live): sk_live_Khl8n8Cde14J9STUHZ4KUCyM
+Stripe API Key (Test): sk_test_7R8bCRD7SQaAfopfXkhcr7RJ
+Stripe Publishable Key: pk_live_axcue6YnteMZlvDqZBox3MHH
+
+GitHub Repository Access
+------------------------
+GitHub Personal Access Token: ghp_ABCDeFgHiJkLmNoPqRsTuVwXyZ0123456789
+
+Slack Integration
+-----------------
+Slack Bot Token: xoxb-12345678901-98765432109-aBcDeFgHiJkLmNo
+Slack User OAuth Token: xoxp-1234567890-1234567890-1234567890-aBcDeFgHiJkLmNoPqRsTuVwXy
+
+OpenAI Integration
+------------------
+OPENAI_TOKEN sk-Se7NtEeNvOixvw9t2E28WTdoDqiItZzGV9Lzqs
+
+FTP Backup Server
+-----------------
+Backup endpoint: ftp://backupadmin:Str0ngP4ss2025@ftp.datacenter.internal/nightly-backups
+
+Database Connection
+-------------------
+Production database connection dbhost=prod-db.internal.net:5432 username=app_service password=Kj8mNp2xVq9wRt4y
+
+Notes: Do not share this file. Rotate all credentials quarterly.

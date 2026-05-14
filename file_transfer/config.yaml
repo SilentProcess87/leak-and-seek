@@ -1,0 +1,81 @@
+# =============================================================================
+# File Transfer Automation - Routing Configuration
+# Each rule maps a file-name pattern to one or more destination handlers.
+# =============================================================================
+
+rules:
+  # Rule 1 – Send every PDF to Slack
+  - name: pdf_reports
+    pattern: "*.pdf"
+    handlers:
+      - type: slack
+        message: "New PDF report uploaded"
+
+  # Rule 2 – Copy spreadsheets to a local/network backup folder
+  - name: spreadsheet_backup
+    pattern: "*.xlsx"
+    handlers:
+      - type: local_copy
+
+  # Rule 3 – Upload CSVs to the remote SFTP server
+  - name: csv_sync
+    pattern: "*.csv"
+    handlers:
+      - type: sftp
+
+  # Rule 4 – Send Word docs to Teams and OneDrive
+  - name: word_docs
+    pattern: "*.docx"
+    handlers:
+      - type: teams
+        message: "New document shared"
+      - type: onedrive
+
+  # Rule 5 – Send images to Telegram and WhatsApp
+  - name: image_alerts
+    pattern: "*.png"
+    handlers:
+      - type: telegram
+        message: "Image uploaded"
+      - type: whatsapp
+        message: "New image"
+
+  # Rule 6 – Archive ZIPs to Box
+  - name: archive_sync
+    pattern: "*.zip"
+    handlers:
+      - type: box
+
+  # Rule 7 – Send large files via WeTransfer
+  - name: wetransfer_large
+    pattern: "*.iso"
+    handlers:
+      - type: wetransfer
+        message: "Large file transfer"
+
+  # Rule 8 – Route test .txt files to all services
+  - name: txt_all_services
+    pattern: "*.txt"
+    handlers:
+      - type: box
+      - type: dropbox
+      - type: onedrive
+      - type: wetransfer
+        message: "DLP test file transfer"
+      - type: local_copy
+      - type: slack
+        message: "DLP test file detected"
+
+  # Rule 9 – Notify Zoom chat about logs
+  - name: log_notify
+    pattern: "*.log"
+    handlers:
+      - type: zoom
+        message: "New log file"
+
+  # Rule 8 – Catch-all: send everything to Slack
+  - name: catch_all
+    pattern: "*"
+    handlers:
+      - type: slack
+        message: "New file detected"

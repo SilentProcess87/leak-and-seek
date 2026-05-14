@@ -1,0 +1,61 @@
+CUSTOMER PAYMENT RECORDS
+Merchant: Pinnacle Commerce Inc.
+Report Period: November 2025
+PCI DSS Compliance Level: 1
+==========================================
+
+Customer: Anderson, Thomas
+  Customer ID: CUST-10234
+  Credit card on file: Visa 4263982640269299
+  Card expiration date: 12/27
+  Credit card CVV: 847
+  Last Payment: $450.00 on 2025-11-01
+  Billing Address: 1755 S St Louis Ave, Chicago, IL 60623
+
+Customer: Martinez, Isabella
+  Customer ID: CUST-10567
+  Credit card: Mastercard 5121212121212124
+  CC expiry: 03/2028
+  Credit card CVC: 912
+  Last Payment: $1,200.00 on 2025-11-05
+  Billing Address: 2530 NW Grand Blvd, Oklahoma City, OK 73116
+
+Customer: Nakamura, Yuki
+  Customer ID: CUST-10891
+  American Express card number: 378282246310005
+  Card expiry date: 09/26
+  Credit card CVV: 4521
+  Last Payment: $2,890.00 on 2025-11-10
+  Billing Address: 200 St Vincent Street, Glasgow G2 5SG
+
+Customer: O'Sullivan, Patrick
+  Customer ID: CUST-11023
+  Visa credit card number: 4917484589897107
+  Card expiration: 06/27
+  Credit card CVV: 331
+  Last Payment: $675.00 on 2025-11-12
+
+Customer: Petrov, Alexei
+  Customer ID: CUST-11245
+  Amex card number: 371449635398431
+  CC expiration date: 11/26
+  Credit card CVC: 7834
+  Last Payment: $3,100.00 on 2025-11-15
+
+Customer: Williams, Grace
+  Customer ID: CUST-11467
+  Card number Visa 4001919257537193
+  Card exp: 02/28
+  Credit card CVV: 556
+  Last Payment: $89.99 on 2025-11-18
+
+Customer: Dubois, Marie
+  Customer ID: CUST-11689
+  Credit card Visa 4007702835532454
+  CC expiry date: 08/27
+  Credit card CVC: 223
+  Last Payment: $1,450.00 on 2025-11-20
+
+NOTICE: This file is subject to PCI DSS requirements.
+Access restricted to authorized personnel only.
+Data must be encrypted and access logged.

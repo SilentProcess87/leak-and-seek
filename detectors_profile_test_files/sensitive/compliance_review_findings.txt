@@ -1,0 +1,97 @@
+COMPLIANCE REVIEW FINDINGS
+Annual Data Protection Assessment
+Reviewer: External Audit Partners LLP
+Date: December 1, 2025
+==========================================
+
+Finding 1: Plaintext Credentials in Production
+
+  Application configuration files contained plaintext credentials:
+    Admin portal password: Secur3!Pass9
+    API gateway password: G@teway2025x
+    Monitoring tool password: M0nitor#Key5
+
+  Legacy systems storing encrypted password hashes:
+    Password (argon2): $argon2id$v=19$m=65536,t=4,p=2$RZv5my1DCYpqxJzJ$4fXPG0kBZoEDlj/hASxh1OHkWP4bR7Y+xPWTN8NHKgw
+    Password (bcrypt): $2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW
+
+  Encoded password in environment variables:
+    Password (base64): QWRtaW5QYXNzd29yZDEyMzQ=
+
+Finding 2: Network Topology Exposure
+
+  Public-facing IP addresses found in documentation:
+    Payment gateway: 155.250.147.80
+    Customer portal: 12.26.241.18
+    Email relay: 109.140.145.174
+
+  External subnet allocations in wiki pages:
+    Partner network CIDR: 203.0.113.0/24
+    Cloud services range: 45.33.32.0/16
+
+  Internal IP address references in shared documents:
+    Active Directory server: 10.10.5.20
+    File server: 192.168.100.50
+    Print server: 172.31.0.15
+
+  Internal IP subnet maps exposed:
+    Corporate WiFi: 192.168.10.0/16
+    IoT devices: 172.17.9.0/24
+
+  Hardware mac address inventory in unprotected spreadsheet:
+    Printer NIC MAC: 00:05:DE:54:E3:AA
+    Access point MAC: 3C:97:0E:5B:1A:F2
+
+Finding 3: Telecom Asset Data
+
+  Mobile phone SIM card inventory without encryption:
+    Sales team ICCID: 8923440000000000003
+    Support team SIM: 8965880812100011146F
+
+Finding 4: Physical Address Exposure
+
+  Client street addresses in unencrypted database:
+    Client A: 1755 S St Louis Ave
+    Client B: 200 St Vincent Street
+    Client C: 2530 NW Grand Blvd
+
+Finding 5: Vehicle Registration Data
+
+  Employee vehicle license plate numbers in parking system:
+    Lot A plate number: ME69 HAN
+    Lot B license plate: WOB ZK 295
+    Lot C plate number: 60-PJR-3
+
+Finding 6: Sensitive Personal Attributes
+
+  HR system religious belief data without proper access controls:
+    Religion: Buddhism
+    Religious belief: Christianity
+    Faith: Islam
+    Spiritual belief: Zoroastrianism
+
+  Employee political view data in survey results:
+    Political ideology: Socialist
+    Political view: Feminist
+    Political ideology: Environmentalist
+
+Finding 7: Regional Compliance Issues
+
+  Japan office corporate number in public filing: 87000012050002
+
+  UK electoral roll number data in HR records:
+    Electoral roll number: GH456
+    UK electoral register: JKL1234
+
+Recommendations:
+  1. Implement field-level encryption for all credentials
+  2. Segment network documentation by classification level
+  3. Encrypt all mobile device inventory records
+  4. Apply data masking to personal attribute fields
+  5. Restrict access to vehicle registration data
+  6. Implement proper controls for diversity survey data
+
+Risk Rating: HIGH
+Remediation Deadline: January 31, 2026
+
+CONFIDENTIAL - Attorney-Client Privileged

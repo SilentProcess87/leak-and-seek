@@ -1,0 +1,57 @@
+VENDOR PAYMENT RECORDS - FISCAL YEAR 2025
+Accounts Payable Department
+Generated: December 1, 2025
+==========================================
+
+Vendor: Acme Industrial Supply Co.
+  Payment Method: Wire Transfer
+  Bank ABA Routing Number: 325081403
+  Amount: $45,230.00
+  Invoice: INV-2025-0891
+  CUSIP 037833100 (collateral reference)
+
+Vendor: EuroTech Solutions BV
+  Payment Method: International Wire
+  IBAN: NL91 ABNA 0417 1643 00
+  Amount: EUR 28,750.00
+  Invoice: ET-2025-1234
+
+Vendor: Pacific Rim Trading Ltd.
+  Payment Method: Wire Transfer
+  ABA routing 026045447
+  Amount: $112,500.00
+  Invoice: PRT-Q3-2025
+
+Vendor: Swiss Precision Instruments AG
+  Payment Method: International Wire
+  IBAN: CH93 0076 2011 6238 5295 7
+  Amount: CHF 67,890.00
+
+Vendor: Balkan Logistics DOO
+  Payment Method: International Wire
+  IBAN: AL47 2121 1009 0000 0002 3569 8741
+  Amount: EUR 15,340.00
+
+Vendor: Global Marketing Associates
+  Payment Method: Corporate Credit Card
+  Visa credit card 4007702835532454
+  Amount: $8,920.00
+
+Vendor: DataCenter Solutions Inc.
+  Payment Method: Wire
+  ABA# 122238200
+  Amount: $234,100.00
+  Securities held as guarantee: CUSIP 594918104
+
+Vendor: Office Supplies Direct
+  Payment Method: Credit Card
+  Card number 4263982640269299
+  Amount: $2,145.00
+
+Summary:
+  Total Payments: $515,875.00
+  Total International: EUR 44,090.00 + CHF 67,890.00
+  Routing numbers verified: 4
+  IBAN accounts verified: 4
+
+Approved by: Maria Santos, VP Finance
