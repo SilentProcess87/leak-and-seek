@@ -485,7 +485,7 @@ def _do_wetransfer_upload(
     recipient: str,
     sender: str = "",
     *,
-    startup_delay: float = 6.0,
+    startup_delay: float = 8.0,
 ) -> None:
     file_path = str(Path(file_path).resolve())
     logger.info("[actions] WeTransfer upload → %s → %s", file_path, recipient)
@@ -493,54 +493,42 @@ def _do_wetransfer_upload(
     # 1. Open WeTransfer in browser
     _open_browser("https://wetransfer.com", startup_delay=startup_delay)
 
-    # 2. Handle cookie consent / terms (Tab to button, Enter)
-    #    WeTransfer shows "I Agree" or "I Accept" on first visit.
-    time.sleep(2)
-    pyautogui.press("tab")
-    time.sleep(0.3)
-    pyautogui.press("enter")
-    time.sleep(2)
-    pyautogui.press("tab")
-    time.sleep(0.3)
-    pyautogui.press("enter")
-    time.sleep(2)
+    # 2. Dismiss any popups (cookie consent, site info, etc.)
+    #    Press Escape to close Chrome's site-info overlay if open
+    pyautogui.press("escape")
+    time.sleep(1)
 
-    # 3. Click the "+" / "Add your files" button area
-    #    The upload button is typically in the center-left of the page.
-    #    We Tab to it and press Enter to open the file picker.
-    for _ in range(5):
-        pyautogui.press("tab")
-        time.sleep(0.2)
-    pyautogui.press("enter")
+    # 3. Click "Add files" button — it's in the left panel
+    #    Use the "+" icon / "Add files" text area.
+    #    Click at roughly (115, 380) relative to the page area.
+    logger.info("[actions] Clicking 'Add files' button…")
+    pyautogui.click(115, 380)
     time.sleep(3)  # wait for file picker dialog
 
     # 4. Type file path in the file picker and confirm
     _clipboard_type(file_path)
     time.sleep(1)
     pyautogui.press("enter")
-    time.sleep(3)  # wait for upload to start
+    time.sleep(4)  # wait for upload to start
 
-    # 5. Fill "Email to" field (Tab to it, paste recipient)
-    pyautogui.press("tab")
-    time.sleep(0.3)
+    # 5. Click "Email to" field and paste recipient
+    logger.info("[actions] Filling 'Email to' field…")
+    pyautogui.click(165, 461)  # "Email to" field area
+    time.sleep(0.5)
     _clipboard_type(recipient)
-    pyautogui.press("enter")  # confirm the email chip
+    pyautogui.press("enter")  # confirm email chip
+    time.sleep(1)
+
+    # 6. Click "Title" / message field
+    pyautogui.click(165, 545)  # Title field
+    time.sleep(0.3)
+    _clipboard_type("DLP Test File")
     time.sleep(0.5)
 
-    # 6. Fill "Your email" field
-    if sender:
-        pyautogui.press("tab")
-        time.sleep(0.3)
-        _clipboard_type(sender)
-        time.sleep(0.5)
-
-    # 7. Skip message field, Tab to Transfer button
-    pyautogui.press("tab")  # message field
-    time.sleep(0.2)
-    pyautogui.press("tab")  # Transfer button
-    time.sleep(0.2)
-    pyautogui.press("enter")  # click Transfer
-    time.sleep(3)
+    # 7. Click "Transfer" button
+    logger.info("[actions] Clicking 'Transfer' button…")
+    pyautogui.click(167, 642)  # Transfer button
+    time.sleep(5)
 
     # 8. DLP popup handling
     check_and_handle_dlp_popup()
