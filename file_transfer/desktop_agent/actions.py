@@ -348,8 +348,58 @@ def _dismiss_foreground() -> bool:
 # directly via keyboard shortcuts — faster and more reliable for
 # well-known flows.
 
+def _is_process_running(name: str) -> bool:
+    """Check if a process is running by name."""
+    import subprocess as _sp
+    try:
+        result = _sp.run(
+            ["tasklist", "/FI", f"IMAGENAME eq {name}", "/FO", "CSV", "/NH"],
+            capture_output=True, text=True, timeout=5,
+        )
+        return name.lower() in result.stdout.lower()
+    except Exception:
+        return False
+
+
+def _ensure_app_foreground(app_name: str) -> bool:
+    """Bring an app's window to the foreground if it's running."""
+    if not IS_WINDOWS:
+        return False
+    try:
+        import pygetwindow as gw
+        hint = app_name.lower()
+        for w in gw.getAllWindows():
+            if hint in (w.title or "").lower():
+                try:
+                    w.activate()
+                except Exception:
+                    w.minimize()
+                    w.restore()
+                time.sleep(1)
+                return True
+    except ImportError:
+        pass
+    return False
+
+
 def _open_app(app_name: str, startup_delay: float = 5.0) -> None:
-    """Launch a desktop app by name, cross-platform."""
+    """Launch a desktop app by name, cross-platform.
+
+    On Windows, first checks if the app is already running and brings
+    it to foreground.  If not, tries the Start menu.  Then verifies
+    the correct process started (not the browser).
+    """
+    process_name = f"{app_name.lower()}.exe"  # e.g. slack.exe
+
+    # If already running, just bring to foreground
+    if _is_process_running(process_name):
+        logger.info("[actions] %s already running — bringing to foreground", app_name)
+        _ensure_app_foreground(app_name)
+        time.sleep(2)
+        return
+
+    # Launch via Start menu
+    logger.info("[actions] Launching %s via Start menu…", app_name)
     if IS_MAC:
         pyautogui.hotkey("command", "space")
         time.sleep(0.8)
@@ -360,6 +410,45 @@ def _open_app(app_name: str, startup_delay: float = 5.0) -> None:
     time.sleep(0.5)
     pyautogui.press("enter")
     time.sleep(startup_delay)
+
+    # Verify the right process started
+    if IS_WINDOWS and not _is_process_running(process_name):
+        logger.warning(
+            "[actions] %s did not start — Start menu may have opened browser instead."
+            " Pressing Escape and retrying…", app_name,
+        )
+        # Close whatever opened (probably browser)
+        pyautogui.press("escape")
+        time.sleep(1)
+        pyautogui.hotkey("alt", "F4")
+        time.sleep(1)
+
+        # Try direct path as fallback
+        _launch_app_direct(app_name)
+        time.sleep(startup_delay)
+
+
+def _launch_app_direct(app_name: str) -> None:
+    """Try to launch an app via common install paths."""
+    import subprocess as _sp
+    home = Path.home()
+    app_lower = app_name.lower()
+
+    # Common install locations on Windows
+    candidates = [
+        home / "AppData" / "Local" / app_name / f"{app_lower}.exe",
+        home / "AppData" / "Local" / "Programs" / app_name / f"{app_lower}.exe",
+        Path(f"C:/Program Files/{app_name}/{app_lower}.exe"),
+        Path(f"C:/Program Files (x86)/{app_name}/{app_lower}.exe"),
+    ]
+
+    for path in candidates:
+        if path.is_file():
+            logger.info("[actions] Launching %s directly: %s", app_name, path)
+            _sp.Popen([str(path)], shell=False)
+            return
+
+    logger.warning("[actions] Could not find %s executable in common paths.", app_name)
 
 
 def _open_browser(url: str, startup_delay: float = 6.0) -> None:
