@@ -56,6 +56,25 @@
     return null;
   }
 
+  // Simulate typing into a React-controlled input field
+  function setReactValue(el, value) {
+    // React overrides the native setter, so we need to use the native
+    // HTMLInputElement setter and then dispatch events React listens to.
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype, "value"
+    )?.set || Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype, "value"
+    )?.set;
+
+    if (nativeSetter) {
+      nativeSetter.call(el, value);
+    } else {
+      el.value = value;
+    }
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
   async function run(params) {
     log("Starting WeTransfer upload automation...");
     log(`Recipient: ${params.recipient}`);
@@ -64,40 +83,10 @@
     // Wait for page to fully load
     await sleep(3000);
 
-    // Step 1: Click "Add files" button to open the native file picker
-    // WeTransfer uses various selectors for this button
-    const addFilesBtn = await waitFor([
-      'button[data-testid="upload-file-button"]',
-      'input[data-testid="file-input"]',
-      'input[type="file"]',
-      '.uploader__sources button:first-child',
-      'button:has(> svg)',  // the + icon button
-    ]);
-
-    if (addFilesBtn) {
-      if (addFilesBtn.tagName === "INPUT" && addFilesBtn.type === "file") {
-        // It's a file input — we can't set its value (security), but we can
-        // click it to open the native file picker. The user/pyautogui will
-        // need to type the path in the dialog.
-        log("Found file input — clicking to open file picker...");
-        addFilesBtn.click();
-      } else {
-        log("Found 'Add files' button — clicking...");
-        addFilesBtn.click();
-      }
-    } else {
-      log("WARNING: Could not find 'Add files' button. Trying click on area...");
-      // Click the general area where the button should be
-      const panel = document.querySelector('.uploader') ||
-                    document.querySelector('[class*="upload"]');
-      if (panel) panel.click();
-    }
-
-    // Wait for file to be selected (pyautogui handles the file picker dialog)
-    log("Waiting for file selection via native dialog (pyautogui will handle this)...");
-    await sleep(8000);
-
-    // Step 2: Fill "Email to" field
+    // Step 1: Fill "Email to" field FIRST (before file picker opens)
+    //   We do this first because once the file picker opens,
+    //   pyautogui will paste the file path — we don't want it
+    //   landing in the email field.
     const emailField = await waitFor([
       'input#autosuggest',
       'input[name="autosuggest"]',
@@ -108,17 +97,25 @@
     if (emailField && params.recipient) {
       log(`Filling 'Email to' with: ${params.recipient}`);
       emailField.focus();
-      emailField.value = params.recipient;
-      emailField.dispatchEvent(new Event("input", { bubbles: true }));
+      setReactValue(emailField, params.recipient);
       await sleep(500);
       // Press Enter to confirm the email chip
       emailField.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "Enter", bubbles: true })
+        new KeyboardEvent("keydown", {
+          key: "Enter", code: "Enter", keyCode: 13, bubbles: true,
+        })
+      );
+      emailField.dispatchEvent(
+        new KeyboardEvent("keypress", {
+          key: "Enter", code: "Enter", keyCode: 13, bubbles: true,
+        })
       );
       await sleep(1000);
+    } else {
+      log("WARNING: Could not find email field");
     }
 
-    // Step 3: Fill "Title" / "Message" field
+    // Step 2: Fill "Title" field
     const titleField = await waitFor([
       'input[name="title"]',
       'textarea#message',
@@ -129,38 +126,52 @@
 
     if (titleField) {
       const title = params.title || "DLP Test File";
-      log(`Filling title/message with: ${title}`);
+      log(`Filling title with: ${title}`);
       titleField.focus();
-      titleField.value = title;
-      titleField.dispatchEvent(new Event("input", { bubbles: true }));
+      setReactValue(titleField, title);
       await sleep(500);
     }
 
-    // Step 4: Click "Transfer" button
-    const transferBtn = await waitFor([
-      'button[data-testid="uploaderForm-transfer-button"]',
-      'button.transfer__button',
-      'button:has-text("Transfer")',
+    // Step 3: Click "Add files" to open native file picker
+    //   pyautogui will handle typing the file path in the dialog.
+    const addFilesBtn = await waitFor([
+      'input[data-testid="file-input"]',
+      'input[type="file"]',
+      'button[data-testid="upload-file-button"]',
     ]);
 
-    if (transferBtn) {
-      log("Clicking 'Transfer' button...");
-      transferBtn.click();
+    if (addFilesBtn) {
+      log("Found upload element — clicking to open file picker...");
+      addFilesBtn.click();
     } else {
-      // Fallback: find any button with "Transfer" text
-      const allButtons = document.querySelectorAll("button");
-      for (const btn of allButtons) {
-        if (btn.textContent.trim().toLowerCase() === "transfer") {
-          log("Found Transfer button by text — clicking...");
+      // Fallback: click buttons containing "Add files" text
+      const allBtns = document.querySelectorAll("button");
+      for (const btn of allBtns) {
+        if (btn.textContent.toLowerCase().includes("add files")) {
+          log("Found 'Add files' button by text — clicking...");
           btn.click();
           break;
         }
       }
     }
 
-    log("WeTransfer automation complete. File picker was native (DLP-visible).");
+    // Wait for pyautogui to handle the file picker dialog
+    log("File picker opened — waiting for pyautogui to select file...");
+    await sleep(12000);
 
-    // Clean up the hash so the extension doesn't re-trigger on refresh
+    // Step 4: Click "Transfer" button
+    log("Looking for Transfer button...");
+    const allButtons = document.querySelectorAll("button");
+    for (const btn of allButtons) {
+      const text = btn.textContent.trim().toLowerCase();
+      if (text === "transfer") {
+        log("Clicking 'Transfer' button...");
+        btn.click();
+        break;
+      }
+    }
+
+    log("WeTransfer automation complete.");
     window.location.hash = "";
   }
 
