@@ -69,9 +69,14 @@ hiddenimports = [
     'watchdog.observers',
     'watchdog.events',
     'pyautogui',
+    'pygetwindow',
     'mss',
     'PIL',
+    'numpy',
+    'cv2',
     'anthropic',
+    'paramiko',
+    'requests',
 ]
 
 # ── Excludes ──────────────────────────────────────────────────────
@@ -86,7 +91,6 @@ excludes = [
     'PySide6',
     'tkinter',
     'matplotlib',
-    'numpy',
     'scipy',
     'pandas',
     'IPython',

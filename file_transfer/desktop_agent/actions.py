@@ -362,15 +362,18 @@ def _open_app(app_name: str, startup_delay: float = 5.0) -> None:
     time.sleep(startup_delay)
 
 
-def _open_browser(url: str, startup_delay: float = 4.0) -> None:
+def _open_browser(url: str, startup_delay: float = 6.0) -> None:
     """Open a URL in the default browser, cross-platform.
 
-    Uses webbrowser.open() which is more reliable than typing a URL
-    into the Start menu / Spotlight.
+    Uses os.startfile() on Windows (works inside PyInstaller bundles)
+    and webbrowser.open() elsewhere.
     """
-    import webbrowser
     logger.info("[actions] Opening browser to %s", url)
-    webbrowser.open(url)
+    if IS_WINDOWS:
+        os.startfile(url)  # type: ignore[attr-defined]
+    else:
+        import webbrowser
+        webbrowser.open(url)
     time.sleep(startup_delay)
 
 
@@ -429,14 +432,29 @@ def _do_slack_upload(
     dlp_blocked = check_and_handle_dlp_popup()
 
     if dlp_blocked:
-        # DLP blocked the upload — close any stuck dialogs so the
-        # next file can proceed cleanly.
-        logger.info("[actions] DLP blocked upload — cleaning up stuck dialogs…")
+        # DLP blocked the upload — two dialogs to close:
+        #   1. The "file is blocked" message box (Enter or Space to dismiss)
+        #   2. The Windows file picker dialog behind it (Cancel / Escape)
+        logger.info("[actions] DLP blocked upload — closing blocked-message dialog…")
         time.sleep(1)
-        pyautogui.press("escape")   # close file picker if still open
+
+        # Close the "blocked" message box (click OK / acknowledge)
+        pyautogui.press("enter")
+        time.sleep(1)
+        pyautogui.press("space")
+        time.sleep(1)
+
+        # Close the file picker dialog (Cancel button = Escape)
+        logger.info("[actions] Closing file picker dialog…")
+        pyautogui.press("escape")
+        time.sleep(1)
+
+        # Close any remaining Slack overlay
+        pyautogui.press("escape")
         time.sleep(0.5)
-        pyautogui.press("escape")   # close any Slack overlay
+        pyautogui.press("escape")
         time.sleep(0.5)
+
         logger.info("[actions] Slack cleanup done — ready for next file.")
     else:
         # 6. Send the file (only if DLP didn't block)
