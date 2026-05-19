@@ -424,6 +424,11 @@ def _auto_seed_loop(inbox: Path, interval: int, count: int) -> None:
     logger = logging.getLogger("auto_seed")
     while True:
         time.sleep(interval)
+        # Don't seed if inbox already has files — let the watcher finish first
+        existing = [f for f in inbox.iterdir() if f.is_file()] if inbox.is_dir() else []
+        if existing:
+            logger.debug("Inbox has %d file(s), skipping auto-seed.", len(existing))
+            continue
         n = _seed_inbox(inbox, count=count)
         if n:
             logger.info("Auto-seeded %d file(s) into %s", n, inbox)

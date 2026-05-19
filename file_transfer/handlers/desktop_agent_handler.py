@@ -31,7 +31,7 @@ class DesktopAgentHandler(BaseHandler):
     name = "desktop_agent"
 
     # Scripted apps that don't need an Anthropic API key
-    _SCRIPTED_APPS = {"slack"}
+    _SCRIPTED_APPS = {"slack", "wetransfer"}
 
     def __init__(self, handler_config: dict[str, Any] | None = None) -> None:
         super().__init__(handler_config)

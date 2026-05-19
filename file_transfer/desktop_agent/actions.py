@@ -448,19 +448,20 @@ def _do_slack_upload(
         logger.info("[actions] Closing file picker dialog…")
         pyautogui.press("escape")
         time.sleep(1)
-
-        # Close any remaining Slack overlay
-        pyautogui.press("escape")
-        time.sleep(0.5)
-        pyautogui.press("escape")
-        time.sleep(0.5)
-
-        logger.info("[actions] Slack cleanup done — ready for next file.")
     else:
         # 6. Send the file (only if DLP didn't block)
         logger.info("[actions] Sending file to channel…")
         time.sleep(2)
         pyautogui.press("enter")
+        time.sleep(2)
+
+    # 7. ALWAYS clean up — close any lingering file dialog or Slack overlay
+    #    This is critical: if the file dialog stays open, it blocks all
+    #    subsequent uploads.
+    logger.info("[actions] Cleaning up any remaining dialogs…")
+    for _ in range(4):
+        pyautogui.press("escape")
+        time.sleep(0.5)
 
     logger.info("[actions] Scripted Slack upload complete.")
 
