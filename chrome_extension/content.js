@@ -2,19 +2,19 @@
  * DLP Simulator - WeTransfer Upload Extension
  *
  * Triggered when the URL hash contains: #dlp-upload:<base64_json>
- * where the JSON has: { file_path, recipient, sender, title }
+ * where the JSON has:
+ *   { file_name, file_content_b64, recipient, sender, title }
  *
  * The Python app opens:
- *   https://wetransfer.com#dlp-upload:eyJmaWxlX3BhdGgiOi4uLn0=
+ *   https://wetransfer.com#dlp-upload:eyJmaWxlX25hbWUiOi4uLn0=
  *
  * This content script:
- *   1. Reads the hash params
- *   2. Clicks "Add files" to open the native file picker (DLP-visible)
+ *   1. Reads the hash params (file content + metadata)
+ *   2. Injects the file directly into <input type="file"> via DataTransfer
+ *      (bypasses the OS file picker — Chrome blocks programmatic opens)
  *   3. Fills "Email to" with recipient
  *   4. Fills "Title" field
  *   5. Clicks "Transfer"
- *
- * The file picker is native OS dialog — DLP agents WILL see it.
  */
 
 (function () {
@@ -59,12 +59,17 @@
   // Simulate typing into a React-controlled input field
   function setReactValue(el, value) {
     // React overrides the native setter, so we need to use the native
-    // HTMLInputElement setter and then dispatch events React listens to.
-    const nativeSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype, "value"
-    )?.set || Object.getOwnPropertyDescriptor(
-      window.HTMLTextAreaElement.prototype, "value"
-    )?.set;
+    // setter and then dispatch events React listens to. The setter must
+    // come from the prototype that actually matches the element —
+    // calling HTMLInputElement's setter on a <textarea> throws
+    // "Illegal invocation".
+    const proto =
+      el instanceof window.HTMLTextAreaElement
+        ? window.HTMLTextAreaElement.prototype
+        : el instanceof window.HTMLInputElement
+        ? window.HTMLInputElement.prototype
+        : Object.getPrototypeOf(el);
+    const nativeSetter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
 
     if (nativeSetter) {
       nativeSetter.call(el, value);
@@ -75,18 +80,58 @@
     el.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
+  // Decode base64 → Uint8Array (binary-safe, unlike TextDecoder).
+  function b64ToBytes(b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  // Inject a File into an <input type="file"> via DataTransfer.
+  // This bypasses the native file picker entirely — Chrome blocks
+  // programmatic file-picker opens without user activation, and
+  // pyautogui workarounds are unreliable (typed path lands in the
+  // wrong field). Setting .files + dispatching "change" is what
+  // most React test harnesses use, and WeTransfer's onChange handler
+  // reads event.target.files normally.
+  async function injectFile(fileName, fileBytes) {
+    const fileInput = await waitFor([
+      'input[data-testid="file-input"]',
+      'input[type="file"]',
+    ]);
+    if (!fileInput) {
+      log("ERROR: No <input type=\"file\"> found on page.");
+      return false;
+    }
+
+    const file = new File([fileBytes], fileName, {
+      type: "application/octet-stream",
+    });
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    fileInput.dispatchEvent(new Event("input", { bubbles: true }));
+    log(`Injected ${fileBytes.length} bytes as ${fileName}`);
+    return true;
+  }
+
   async function run(params) {
     log("Starting WeTransfer upload automation...");
     log(`Recipient: ${params.recipient}`);
     log(`Title: ${params.title || "DLP Test File"}`);
+    log(`File: ${params.file_name}`);
 
     // Wait for page to fully load
     await sleep(3000);
 
-    // Step 1: Fill "Email to" field FIRST (before file picker opens)
-    //   We do this first because once the file picker opens,
-    //   pyautogui will paste the file path — we don't want it
-    //   landing in the email field.
+    // Step 1: Fill "Email to" FIRST.
+    //   Doing this before the file injection means the React tree is
+    //   still in its empty-form state when we set the value — no
+    //   re-mount races, no other inputs around for selectors to
+    //   accidentally match.
     const emailField = await waitFor([
       'input#autosuggest',
       'input[name="autosuggest"]',
@@ -98,7 +143,7 @@
       log(`Filling 'Email to' with: ${params.recipient}`);
       emailField.focus();
       setReactValue(emailField, params.recipient);
-      await sleep(500);
+      await sleep(4000);
       // Press Enter to confirm the email chip
       emailField.dispatchEvent(
         new KeyboardEvent("keydown", {
@@ -110,7 +155,7 @@
           key: "Enter", code: "Enter", keyCode: 13, bubbles: true,
         })
       );
-      await sleep(1000);
+      await sleep(4000);
     } else {
       log("WARNING: Could not find email field");
     }
@@ -129,50 +174,60 @@
       log(`Filling title with: ${title}`);
       titleField.focus();
       setReactValue(titleField, title);
-      await sleep(500);
+      await sleep(4000);
     }
 
-    // Step 3: Click "Add files" to open native file picker
-    //   pyautogui will handle typing the file path in the dialog.
-    const addFilesBtn = await waitFor([
-      'input[data-testid="file-input"]',
-      'input[type="file"]',
-      'button[data-testid="upload-file-button"]',
-    ]);
-
-    if (addFilesBtn) {
-      log("Found upload element — clicking to open file picker...");
-      addFilesBtn.click();
+    // Step 3: Inject the file LAST (before Transfer). Doing it here
+    //   means any re-render WeTransfer does on file attach won't wipe
+    //   the email or title we just typed.
+    if (params.file_content_b64 && params.file_name) {
+      const bytes = b64ToBytes(params.file_content_b64);
+      log(`Injecting file via DataTransfer (${bytes.length} bytes)...`);
+      const ok = await injectFile(params.file_name, bytes);
+      if (!ok) {
+        log("ERROR: File injection failed — aborting.");
+        return;
+      }
+      // Let WeTransfer's React tree re-render with the file attached.
+      await sleep(4000);
     } else {
-      // Fallback: click buttons containing "Add files" text
-      const allBtns = document.querySelectorAll("button");
-      for (const btn of allBtns) {
-        if (btn.textContent.toLowerCase().includes("add files")) {
-          log("Found 'Add files' button by text — clicking...");
-          btn.click();
+      log("WARNING: No file content in hash params.");
+    }
+
+    // Step 4: Click "Transfer" button
+    log("Looking for Transfer button...");
+    await sleep(4000);
+    let transferBtn = document.querySelector(
+      'button[data-testid="uploaderForm-transfer-button"]'
+    );
+    if (!transferBtn) {
+      for (const btn of document.querySelectorAll("button")) {
+        if (btn.textContent.trim().toLowerCase() === "transfer") {
+          transferBtn = btn;
           break;
         }
       }
     }
-
-    // Wait for pyautogui to handle the file picker dialog
-    log("File picker opened — waiting for pyautogui to select file...");
-    await sleep(12000);
-
-    // Step 4: Click "Transfer" button
-    log("Looking for Transfer button...");
-    const allButtons = document.querySelectorAll("button");
-    for (const btn of allButtons) {
-      const text = btn.textContent.trim().toLowerCase();
-      if (text === "transfer") {
-        log("Clicking 'Transfer' button...");
-        btn.click();
-        break;
-      }
+    if (transferBtn) {
+      log("Clicking 'Transfer' button...");
+      transferBtn.click();
+    } else {
+      log("WARNING: Transfer button not found.");
     }
 
-    log("WeTransfer automation complete.");
+    // Clear the hash so a refresh doesn't re-trigger the upload.
     window.location.hash = "";
+
+    // Give the upload POST time to start before tearing down the tab —
+    // closing too early aborts the in-flight request.
+    log("Upload triggered — closing tab in 30s.");
+    await sleep(30000);
+
+    // Ask the ISOLATED-world bridge to close us. We can't call
+    // chrome.tabs from MAIN world, and window.close() doesn't work
+    // for tabs the user (or the OS) opened directly.
+    log("WeTransfer automation complete — requesting tab close.");
+    document.dispatchEvent(new CustomEvent("dlp-close-tab"));
   }
 
   // Check on load

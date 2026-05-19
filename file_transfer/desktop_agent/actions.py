@@ -595,23 +595,35 @@ def _do_wetransfer_upload(
     *,
     startup_delay: float = 8.0,
 ) -> None:
-    """WeTransfer upload using Chrome extension + pyautogui for file picker.
+    """WeTransfer upload via Chrome extension (DOM-only, no file picker).
 
-    The Chrome extension (chrome_extension/) handles all DOM interaction
-    (fill emails, click Transfer).  Python only:
-    1. Opens wetransfer.com with a hash trigger for the extension
-    2. Waits for the native file picker dialog
-    3. Types the file path in the dialog (DLP-visible)
+    Chrome blocks programmatic file-picker opens without user activation,
+    and pyautogui workarounds drop the file path into the wrong field.
+    Instead, we read the file bytes here, base64-encode them into the
+    URL hash, and the extension injects the file directly into the
+    <input type="file"> via DataTransfer. WeTransfer's React onChange
+    handler picks up the file like any normal upload.
+
+    Trade-off: the URL hash carries the entire file, so this caps at
+    a few MB. For DLP test files (small text/PDF) that's fine.
     """
     import base64
     import json
 
-    file_path = str(Path(file_path).resolve())
-    logger.info("[actions] WeTransfer upload → %s → %s", file_path, recipient)
+    file_path_obj = Path(file_path).resolve()
+    file_bytes = file_path_obj.read_bytes()
+    file_b64 = base64.b64encode(file_bytes).decode("ascii")
+    file_size = len(file_bytes)
 
-    # 1. Build the trigger URL with base64-encoded params in the hash
+    logger.info(
+        "[actions] WeTransfer upload → %s (%d bytes) → %s",
+        file_path_obj.name, file_size, recipient,
+    )
+
+    # 1. Build the trigger URL with the file content + metadata.
     params = {
-        "file_path": file_path,
+        "file_name": file_path_obj.name,
+        "file_content_b64": file_b64,
         "recipient": recipient,
         "sender": sender,
         "title": "DLP Test File",
@@ -619,29 +631,26 @@ def _do_wetransfer_upload(
     b64 = base64.b64encode(json.dumps(params).encode()).decode()
     trigger_url = f"https://wetransfer.com#dlp-upload:{b64}"
 
-    # 2. Open browser with the trigger URL
-    logger.info("[actions] Opening WeTransfer with extension trigger…")
+    if len(trigger_url) > 2_000_000:
+        logger.warning(
+            "[actions] Trigger URL is %d chars — Chrome may refuse to load it. "
+            "Use the Playwright handler for files larger than ~1.5MB.",
+            len(trigger_url),
+        )
+
+    # 2. Open the browser. The extension handles everything from here:
+    #    inject file via DataTransfer → fill email + title → click Transfer.
+    logger.info("[actions] Opening WeTransfer (trigger URL: %d chars)…",
+                len(trigger_url))
     _open_browser(trigger_url, startup_delay=startup_delay)
-
-    # 3. Wait for page to load
     _wait_for_page_load("https://wetransfer.com", timeout=30, max_retries=3)
-    time.sleep(3)  # extra wait for extension to process
 
-    # 4. The extension clicks "Add files" which opens the native file picker.
-    #    pyautogui handles typing the file path in the dialog.
-    logger.info("[actions] Waiting for file picker dialog…")
-    time.sleep(5)  # wait for extension to click Add Files + dialog to open
+    # 3. Give the extension time to do its work: inject file (~3s after
+    #    load), fill email (~1s), fill title (~1s), click Transfer.
+    logger.info("[actions] Extension handling upload — waiting…")
+    time.sleep(20)
 
-    # Type the file path in the file picker and confirm
-    _clipboard_type(file_path)
-    time.sleep(1)
-    pyautogui.press("enter")
-
-    # 5. Wait for extension to fill email + click Transfer
-    logger.info("[actions] Extension handling email + transfer…")
-    time.sleep(15)  # extension needs ~10s to fill fields + click
-
-    # 6. DLP popup handling
+    # 4. DLP popup handling (Cortex XDR may flag the network upload).
     check_and_handle_dlp_popup()
 
     logger.info("[actions] WeTransfer upload initiated — verification may be needed.")
