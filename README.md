@@ -6,6 +6,18 @@ If your DLP can't find it, **you lose**. If it does, **everybody wins**.
 
 ---
 
+## 📦 Download
+
+The fastest way to try this on a Windows test machine — no Python install required:
+
+### 👉 [Download `DLPSimulator.exe` (latest release)](https://github.com/SilentProcess87/leak-and-seek/releases/latest/download/DLPSimulator.exe)
+
+You can also browse all releases here: **[github.com/SilentProcess87/leak-and-seek/releases](https://github.com/SilentProcess87/leak-and-seek/releases)**
+
+The exe is a PyInstaller bundle: all Python dependencies are baked in. Just download, double-click, and follow the setup wizard. Make sure you complete the **[pre-login prerequisites](#-pre-login-prerequisites)** below first, otherwise some channels will silently fail.
+
+---
+
 ## 🎯 What this project solves
 
 DLP vendors all claim to catch leaks. Proving it requires:
@@ -62,9 +74,26 @@ This repo gives you all three.
 
 ### Prerequisites
 
-- **Node.js** 18+ (for Playwright)
-- **Python** 3.11+ (for the file-transfer leaker)
+- **Node.js** 18+ (for Playwright) — only if you're running from source
+- **Python** 3.11+ (for the file-transfer leaker) — only if you're running from source
 - A DLP product positioned between this machine and the outbound channels you care about
+- The **[pre-login prerequisites](#-pre-login-prerequisites)** below — required regardless of whether you use the exe or run from source
+
+### 🔐 Pre-login prerequisites
+
+The simulator drives **real desktop apps and signed-in browser sessions**. It does **not** perform the login flow itself — that's a one-time human step on the test machine. Before you run the simulator, install and sign in to every service whose handler you plan to exercise:
+
+| Service | What to install | What to sign in to |
+| --- | --- | --- |
+| **Slack** | [Slack Desktop](https://slack.com/downloads/) | Workspace that owns the target channel |
+| **Dropbox** | [Dropbox Desktop](https://www.dropbox.com/install) | Account whose sync folder you point `DROPBOX_SYNC_FOLDER` at |
+| **OneDrive** | Built into Windows / [OneDrive download](https://www.microsoft.com/microsoft-365/onedrive/download) | Microsoft account; finish the "set up sync" flow |
+| **Box** | [Box Drive](https://www.box.com/resources/downloads) | Account whose sync folder you point `BOX_SYNC_FOLDER` at |
+| **Telegram** | [Telegram Desktop](https://desktop.telegram.org/) | Account you'll send from (only needed for the Telegram handler) |
+| **WeTransfer** | (Browser — Chrome) | Keep Chrome signed in to your `WETRANSFER_SENDER_EMAIL` account so the page doesn't prompt for email verification mid-run |
+| **Chrome extension** | Load `chrome_extension/` as an unpacked extension (`chrome://extensions` → Developer mode → Load unpacked) | n/a |
+
+If any of these is **not installed** or **not signed in**, the upload for that channel will silently fail or pop a login prompt that the simulator can't dismiss. Do the one-time setup first; the simulator only handles the upload itself.
 
 ### 1. Clone & install
 
