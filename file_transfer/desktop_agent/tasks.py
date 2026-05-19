@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from .actions import scripted_slack_upload
+from .actions import scripted_slack_upload, scripted_wetransfer_upload
 
 logger = logging.getLogger(__name__)
 
@@ -175,6 +175,23 @@ def get_task(
             recipient=recipient, file_path=file_path, file_name=file_name,
         )
         return Task(app=app, prompt=prompt)
+
+    if app == "wetransfer":
+        recipient = handler_config.get("recipient", os.getenv("WETRANSFER_RECIPIENT_EMAIL", ""))
+        sender = handler_config.get("sender", os.getenv("WETRANSFER_SENDER_EMAIL", ""))
+        prompt = _SYSTEM_PREAMBLE + _GENERIC_PROMPT.format(
+            url="https://wetransfer.com", file_path=file_path,
+        )
+        return Task(
+            app=app,
+            prompt=prompt,
+            scripted_fn=scripted_wetransfer_upload,
+            scripted_kwargs={
+                "file_path": file_path,
+                "recipient": recipient,
+                "sender": sender,
+            },
+        )
 
     # Generic — treat ``app`` as a URL or use the ``url`` config key
     url = handler_config.get("url", app)

@@ -137,6 +137,14 @@ def _setup_wizard() -> Path:
         env["SFTP_REMOTE_DIR"] = _ask("SFTP remote dir", "/uploads")
     print()
 
+    # ── WeTransfer ─────────────────────────────────────────────────
+    print("  ── WeTransfer (leave recipient blank to skip) ──")
+    env["WETRANSFER_RECIPIENT_EMAIL"] = _ask("WeTransfer recipient email", "")
+    if env["WETRANSFER_RECIPIENT_EMAIL"]:
+        env["WETRANSFER_SENDER_EMAIL"] = _ask("WeTransfer sender email", "")
+        env["MAILSLURP_API_KEY"] = _ask("MailSlurp API key (for auto-verification)", "")
+    print()
+
     # ── Anthropic API key ──────────────────────────────────────────
     print("  ── AI Desktop Agent (for Teams / Telegram / Gmail) ──")
     print("  Not needed for Slack.  Leave blank to skip.")
@@ -231,6 +239,15 @@ def _write_hidden_config(env: dict[str, str]) -> None:
     if env.get("SFTP_HOST"):
         handlers.append({"type": "sftp"})
 
+    # WeTransfer (browser via desktop agent)
+    if env.get("WETRANSFER_RECIPIENT_EMAIL"):
+        handlers.append({
+            "type": "desktop_agent",
+            "app": "wetransfer",
+            "recipient": env["WETRANSFER_RECIPIENT_EMAIL"],
+            "sender": env.get("WETRANSFER_SENDER_EMAIL", ""),
+        })
+
     # AI-driven browser apps
     if env.get("ANTHROPIC_API_KEY"):
         if env.get("TEAMS_TEAM"):
@@ -266,8 +283,17 @@ def _write_hidden_config(env: dict[str, str]) -> None:
 # Deploy test files
 # ---------------------------------------------------------------------------
 
-def _deploy_test_files(inbox: Path, count: int | None = None) -> int:
-    inbox.mkdir(parents=True, exist_ok=True)
+STAGING_DIR = WORK_DIR / "staging"
+
+
+def _init_staging() -> int:
+    """Copy bundled test files into a permanent staging folder (once)."""
+    STAGING_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Skip if staging already has files
+    existing = list(STAGING_DIR.glob("*"))
+    if existing:
+        return len(existing)
 
     test_dir = TEST_FILES_DIR
     if not test_dir.is_dir():
@@ -275,7 +301,23 @@ def _deploy_test_files(inbox: Path, count: int | None = None) -> int:
     if not test_dir.is_dir():
         return 0
 
-    files = [f for f in test_dir.rglob("*") if f.is_file() and not f.name.startswith(".")]
+    copied = 0
+    for src in test_dir.rglob("*"):
+        if src.is_file() and not src.name.startswith("."):
+            shutil.copy2(src, STAGING_DIR / src.name)
+            copied += 1
+    return copied
+
+
+def _seed_inbox(inbox: Path, count: int | None = None) -> int:
+    """Copy files from staging/ → inbox/ (the watch folder).
+
+    Files are given unique names so the watcher treats each as new.
+    The watcher will delete them after transfer completes.
+    """
+    inbox.mkdir(parents=True, exist_ok=True)
+
+    files = [f for f in STAGING_DIR.iterdir() if f.is_file()]
     if not files:
         return 0
 
@@ -298,7 +340,7 @@ def _auto_seed_loop(inbox: Path, interval: int, count: int) -> None:
     logger = logging.getLogger("auto_seed")
     while True:
         time.sleep(interval)
-        n = _deploy_test_files(inbox, count=count)
+        n = _seed_inbox(inbox, count=count)
         if n:
             logger.info("Auto-seeded %d file(s) into %s", n, inbox)
 
@@ -501,9 +543,13 @@ def main() -> None:
     interval = int(os.getenv("DLP_AUTO_SEED_INTERVAL", "120"))
     seed_count = int(os.getenv("DLP_AUTO_SEED_COUNT", "2"))
 
-    # ── Initial seed — deploy ALL test files ───────────────────────
-    n = _deploy_test_files(inbox)
-    print(f"  ✓ {n} test file(s) deployed to {inbox}")
+    # ── Initialize staging folder (bundled test files) ────────────
+    ns = _init_staging()
+    print(f"  ✓ {ns} test file(s) in staging/")
+
+    # ── Initial seed — copy from staging → inbox ──────────────────
+    n = _seed_inbox(inbox)
+    print(f"  ✓ {n} file(s) seeded into inbox (will be deleted after transfer)")
 
     # ── Start auto-seed timer ──────────────────────────────────────
     _start_auto_seed(inbox)

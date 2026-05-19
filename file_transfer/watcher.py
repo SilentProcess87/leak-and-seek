@@ -99,6 +99,8 @@ class _EventHandler(FileSystemEventHandler):
     # ------------------------------------------------------------------
     def _dispatch(self, file_path: Path) -> None:
         time.sleep(_SETTLE_DELAY)
+        if not file_path.is_file():
+            return  # already gone (race with previous deletion)
         logger.info("New file detected: %s", file_path.name)
         matched = False
         for rule in self.rules:
@@ -116,9 +118,23 @@ class _EventHandler(FileSystemEventHandler):
                         fut.result()  # surface exceptions
                     except Exception:
                         logger.exception("Handler failed for %s", file_path.name)
+
+                # Delete the file from the watch folder after all handlers
+                # have finished so it doesn't get re-processed.
+                _delete_after_transfer(file_path)
                 break  # first-match-wins
         if not matched:
             logger.info("  → No matching rule for %s", file_path.name)
+
+
+def _delete_after_transfer(file_path: Path) -> None:
+    """Remove a file from the watch folder after all handlers ran."""
+    try:
+        if file_path.is_file():
+            file_path.unlink()
+            logger.info("  → Deleted from inbox: %s", file_path.name)
+    except Exception:
+        logger.warning("  → Could not delete %s (may already be gone)", file_path.name)
 
 
 def start(watch_folder: Path, rules: list[_Rule]) -> None:

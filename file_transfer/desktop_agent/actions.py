@@ -25,6 +25,32 @@ logger = logging.getLogger(__name__)
 IS_MAC = platform.system() == "Darwin"
 IS_WINDOWS = platform.system() == "Windows"
 
+
+def _clipboard_type(text: str) -> None:
+    """Type text by pasting from clipboard.
+
+    ``pyautogui.write()`` duplicates characters on Windows because of
+    keyboard input race conditions.  Clipboard paste is instant and
+    100% reliable.
+    """
+    import subprocess as _sp
+
+    if IS_WINDOWS:
+        # PowerShell Set-Clipboard
+        _sp.run(
+            ["powershell", "-Command", f"Set-Clipboard -Value '{text}'"],
+            capture_output=True, check=False,
+        )
+    elif IS_MAC:
+        _sp.run(["pbcopy"], input=text.encode(), check=False)
+    else:
+        # Linux xclip fallback
+        _sp.run(["xclip", "-selection", "clipboard"], input=text.encode(), check=False)
+
+    time.sleep(0.15)
+    _hotkey_ctrl("v")
+    time.sleep(0.3)
+
 # Safety: tiny pause between pyautogui actions so DLP agents can react
 pyautogui.PAUSE = 0.3
 
@@ -158,19 +184,14 @@ def check_and_handle_dlp_popup() -> bool:
 def _open_app(app_name: str, startup_delay: float = 5.0) -> None:
     """Launch a desktop app by name, cross-platform."""
     if IS_MAC:
-        # Cmd+Space → Spotlight → type app name → Enter
         pyautogui.hotkey("command", "space")
         time.sleep(0.8)
-        pyautogui.write(app_name, interval=0.05)
-        time.sleep(1)
-        pyautogui.press("enter")
     else:
-        # Windows: Win key → type app name → Enter
         pyautogui.press("win")
         time.sleep(1)
-        pyautogui.write(app_name, interval=0.05)
-        time.sleep(1)
-        pyautogui.press("enter")
+    _clipboard_type(app_name)
+    time.sleep(0.5)
+    pyautogui.press("enter")
     time.sleep(startup_delay)
 
 
@@ -179,15 +200,12 @@ def _open_browser(url: str, startup_delay: float = 4.0) -> None:
     if IS_MAC:
         pyautogui.hotkey("command", "space")
         time.sleep(0.8)
-        pyautogui.write(url, interval=0.02)
-        time.sleep(0.5)
-        pyautogui.press("enter")
     else:
         pyautogui.press("win")
         time.sleep(1)
-        pyautogui.write(url, interval=0.02)
-        time.sleep(0.5)
-        pyautogui.press("enter")
+    _clipboard_type(url)
+    time.sleep(0.5)
+    pyautogui.press("enter")
     time.sleep(startup_delay)
 
 
@@ -217,7 +235,7 @@ def scripted_slack_upload(
     # 2. Navigate to channel (Ctrl/Cmd+K = quick switcher)
     _hotkey_ctrl("k")
     time.sleep(1.5)
-    pyautogui.write(channel, interval=0.04)
+    _clipboard_type(channel)
     time.sleep(2)
     pyautogui.press("enter")
     time.sleep(2)
@@ -227,7 +245,7 @@ def scripted_slack_upload(
     time.sleep(2.5)
 
     # 4. Type the file path in the file picker and confirm
-    pyautogui.write(file_path, interval=0.02)
+    _clipboard_type(file_path)
     time.sleep(1)
     pyautogui.press("enter")
 
@@ -242,6 +260,80 @@ def scripted_slack_upload(
     logger.info("[actions] Scripted Slack upload complete.")
 
 
+def scripted_wetransfer_upload(
+    file_path: str | Path,
+    recipient: str,
+    sender: str = "",
+    *,
+    startup_delay: float = 6.0,
+) -> None:
+    """Upload a file via WeTransfer using pyautogui browser automation.
+
+    Opens wetransfer.com in the default browser, navigates the UI with
+    Tab/Enter/clipboard-paste, uploads the file through the native file
+    picker (DLP-visible), and fills in recipient/sender emails.
+    """
+    file_path = str(Path(file_path).resolve())
+    logger.info("[actions] WeTransfer upload → %s → %s", file_path, recipient)
+
+    # 1. Open WeTransfer in browser
+    _open_browser("https://wetransfer.com", startup_delay=startup_delay)
+
+    # 2. Handle cookie consent / terms (Tab to button, Enter)
+    #    WeTransfer shows "I Agree" or "I Accept" on first visit.
+    time.sleep(2)
+    pyautogui.press("tab")
+    time.sleep(0.3)
+    pyautogui.press("enter")
+    time.sleep(2)
+    pyautogui.press("tab")
+    time.sleep(0.3)
+    pyautogui.press("enter")
+    time.sleep(2)
+
+    # 3. Click the "+" / "Add your files" button area
+    #    The upload button is typically in the center-left of the page.
+    #    We Tab to it and press Enter to open the file picker.
+    for _ in range(5):
+        pyautogui.press("tab")
+        time.sleep(0.2)
+    pyautogui.press("enter")
+    time.sleep(3)  # wait for file picker dialog
+
+    # 4. Type file path in the file picker and confirm
+    _clipboard_type(file_path)
+    time.sleep(1)
+    pyautogui.press("enter")
+    time.sleep(3)  # wait for upload to start
+
+    # 5. Fill "Email to" field (Tab to it, paste recipient)
+    pyautogui.press("tab")
+    time.sleep(0.3)
+    _clipboard_type(recipient)
+    pyautogui.press("enter")  # confirm the email chip
+    time.sleep(0.5)
+
+    # 6. Fill "Your email" field
+    if sender:
+        pyautogui.press("tab")
+        time.sleep(0.3)
+        _clipboard_type(sender)
+        time.sleep(0.5)
+
+    # 7. Skip message field, Tab to Transfer button
+    pyautogui.press("tab")  # message field
+    time.sleep(0.2)
+    pyautogui.press("tab")  # Transfer button
+    time.sleep(0.2)
+    pyautogui.press("enter")  # click Transfer
+    time.sleep(3)
+
+    # 8. DLP popup handling
+    check_and_handle_dlp_popup()
+
+    logger.info("[actions] WeTransfer upload initiated — verification may be needed.")
+
+
 def scripted_browser_upload(
     url: str,
     file_path: str | Path,
@@ -249,23 +341,14 @@ def scripted_browser_upload(
     startup_delay: float = 4.0,
 ) -> None:
     """Open a URL in the browser and attempt file upload via
-    keyboard shortcuts.  This is a generic pyautogui flow for
-    web apps — works for WeTransfer, Gmail, etc.
+    keyboard shortcuts.  Generic pyautogui flow.
     """
     file_path = str(Path(file_path).resolve())
     logger.info("[actions] Browser upload → url=%s, file=%s", url, file_path)
 
-    # 1. Open the URL
     _open_browser(url, startup_delay=startup_delay)
-
-    # 2. Wait for page to load, then look for an upload area
-    #    Many web apps support Ctrl+O or have a visible upload button.
-    #    We use Tab navigation + Enter as a generic approach.
     time.sleep(3)
-
-    # 3. DLP popup handling (in case the browser triggers it)
     check_and_handle_dlp_popup()
-
     logger.info("[actions] Browser opened to %s — agent will take over.", url)
 
 
