@@ -141,37 +141,119 @@ def execute_computer_action(action: dict[str, Any]) -> None:
 
 
 # ── DLP Popup Handling ─────────────────────────────────────────────
-# Ported from SlackNative.py — scans the screen for a Cortex DLP
-# confirmation button and clicks it if present.
+# Detects the Cortex XDR / DLP popup (CyveraConsole.exe) by finding
+# its window, bringing it to focus, and pressing Enter to confirm.
+# Falls back to image-based detection if window detection fails.
+
+DLP_PROCESS_NAME = os.getenv("DLP_PROCESS_NAME", "CyveraConsole.exe")
+
 
 def check_and_handle_dlp_popup() -> bool:
-    """Scan the screen for a Cortex DLP popup and click the confirm button.
+    """Detect and dismiss the Cortex DLP popup.
 
-    Returns True if a popup was detected and handled, False otherwise.
+    Strategy:
+    1. Look for a CyveraConsole.exe window (the Cortex XDR DLP popup).
+    2. If found, bring it to foreground and press Enter to confirm.
+    3. If no window found, fall back to image-based detection.
+
+    Returns True if a popup was detected and handled.
     """
-    logger.info("[actions] Checking for Cortex DLP popup…")
+    logger.info("[actions] Checking for Cortex DLP popup (%s)…", DLP_PROCESS_NAME)
     time.sleep(DLP_WAIT_SECONDS)
 
-    if not Path(DLP_BUTTON_IMAGE).is_file():
-        logger.debug(
-            "[actions] DLP button image not found at %s — skipping check",
-            DLP_BUTTON_IMAGE,
-        )
+    # ── Strategy 1: Window-based detection ──────────────────────────
+    if _dismiss_dlp_window():
+        return True
+
+    # ── Strategy 2: Image-based fallback ───────────────────────────
+    if Path(DLP_BUTTON_IMAGE).is_file():
+        try:
+            location = pyautogui.locateCenterOnScreen(
+                DLP_BUTTON_IMAGE, confidence=DLP_CONFIDENCE
+            )
+            if location is not None:
+                logger.info("[actions] DLP popup detected via image! Clicking…")
+                pyautogui.click(location)
+                time.sleep(1)
+                return True
+        except pyautogui.ImageNotFoundException:
+            pass
+        except Exception as exc:
+            logger.warning("[actions] Image-based DLP check error: %s", exc)
+
+    logger.info("[actions] No DLP popup detected. Proceeding normally.")
+    return False
+
+
+def _dismiss_dlp_window() -> bool:
+    """Find and dismiss the CyveraConsole.exe popup window."""
+    import subprocess as _sp
+
+    if not IS_WINDOWS:
         return False
 
+    # Check if the process is running
     try:
-        location = pyautogui.locateCenterOnScreen(
-            DLP_BUTTON_IMAGE, confidence=DLP_CONFIDENCE
+        result = _sp.run(
+            ["tasklist", "/FI", f"IMAGENAME eq {DLP_PROCESS_NAME}", "/FO", "CSV", "/NH"],
+            capture_output=True, text=True, timeout=5,
         )
-        if location is not None:
-            logger.info("[actions] DLP popup detected! Clicking confirm button…")
-            pyautogui.click(location)
+        if DLP_PROCESS_NAME.lower() not in result.stdout.lower():
+            return False
+    except Exception:
+        return False
+
+    logger.info("[actions] %s is running — looking for popup window…", DLP_PROCESS_NAME)
+
+    # Try to find and focus the popup window using pyautogui/pygetwindow
+    try:
+        import pygetwindow as gw
+        # Look for windows belonging to Cortex / Cyvera
+        candidates = []
+        for w in gw.getAllWindows():
+            title = (w.title or "").lower()
+            if any(kw in title for kw in [
+                "cortex", "cyvera", "dlp", "data loss",
+                "block", "prevent", "policy", "alert",
+                "notification", "warning",
+            ]):
+                candidates.append(w)
+
+        if candidates:
+            win = candidates[0]
+            logger.info("[actions] Found DLP window: %r — dismissing…", win.title)
+            try:
+                win.activate()
+            except Exception:
+                win.minimize()
+                win.restore()
+            time.sleep(0.5)
+            # Press Enter to confirm/dismiss the dialog
+            pyautogui.press("enter")
+            time.sleep(0.5)
+            # Also try Tab+Enter in case Enter alone doesn't hit the button
+            pyautogui.press("tab")
+            time.sleep(0.2)
+            pyautogui.press("enter")
             time.sleep(1)
+            logger.info("[actions] DLP popup dismissed.")
             return True
-    except pyautogui.ImageNotFoundException:
-        logger.info("[actions] No DLP popup detected. Proceeding normally.")
-    except Exception as exc:
-        logger.warning("[actions] DLP popup check error: %s", exc)
+
+    except ImportError:
+        # pygetwindow not available — use Alt+Tab brute force
+        logger.debug("[actions] pygetwindow not available, trying Alt+Tab…")
+
+    # Fallback: if we know the process is running, try Alt-Tab + Enter
+    # This works when the popup just appeared and is the foreground window
+    try:
+        pyautogui.hotkey("alt", "tab")
+        time.sleep(1)
+        pyautogui.press("enter")
+        time.sleep(0.5)
+        logger.info("[actions] Sent Enter to foreground window (DLP process was running).")
+        return True
+    except Exception:
+        pass
 
     return False
 
