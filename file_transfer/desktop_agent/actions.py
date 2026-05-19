@@ -377,6 +377,50 @@ def _open_browser(url: str, startup_delay: float = 6.0) -> None:
     time.sleep(startup_delay)
 
 
+def _wait_for_page_load(url: str, timeout: int = 30, max_retries: int = 3) -> bool:
+    """Wait for a browser page to finish loading by checking the title bar.
+
+    Looks for a browser window whose title contains part of the URL's
+    domain (e.g. 'wetransfer' for wetransfer.com).  If not found within
+    *timeout* seconds, refreshes (F5) and retries up to *max_retries* times.
+
+    Returns True if the page was detected, False if all retries exhausted.
+    """
+    from urllib.parse import urlparse
+    domain_hint = urlparse(url).netloc.replace("www.", "").split(".")[0].lower()
+    logger.info("[actions] Waiting for page to load (looking for '%s' in title)…",
+                domain_hint)
+
+    for attempt in range(1, max_retries + 1):
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            if IS_WINDOWS:
+                try:
+                    import pygetwindow as gw
+                    for w in gw.getAllWindows():
+                        if domain_hint in (w.title or "").lower():
+                            logger.info("[actions] Page loaded (title: %r)", w.title)
+                            return True
+                except ImportError:
+                    pass
+            time.sleep(2)
+
+        if attempt < max_retries:
+            logger.warning(
+                "[actions] Page not loaded after %ds — refreshing (attempt %d/%d)…",
+                timeout, attempt, max_retries,
+            )
+            pyautogui.press("F5")
+            time.sleep(5)  # give refresh a head start
+        else:
+            logger.warning(
+                "[actions] Page still not loaded after %d attempts — continuing anyway.",
+                max_retries,
+            )
+
+    return False
+
+
 def _hotkey_ctrl(key: str) -> None:
     """Press Ctrl+key (Windows) or Cmd+key (Mac)."""
     mod = "command" if IS_MAC else "ctrl"
@@ -493,8 +537,10 @@ def _do_wetransfer_upload(
     # 1. Open WeTransfer in browser
     _open_browser("https://wetransfer.com", startup_delay=startup_delay)
 
-    # 2. Dismiss any popups (cookie consent, site info, etc.)
-    #    Press Escape to close Chrome's site-info overlay if open
+    # 2. Wait for page to actually load (retry with refresh if needed)
+    _wait_for_page_load("https://wetransfer.com", timeout=30, max_retries=3)
+
+    # 3. Dismiss any popups (cookie consent, site info, etc.)
     pyautogui.press("escape")
     time.sleep(1)
 
