@@ -53,8 +53,27 @@ class SFTPHandler(BaseHandler):
             sftp = paramiko.SFTPClient.from_transport(transport)
             assert sftp is not None
             remote_path = f"{self.remote_dir}/{file_path.name}"
-            sftp.put(str(file_path), remote_path)
-            logger.info("[sftp] Uploaded to %s:%s", self.host, remote_path)
+
+            # Try the configured dir first, fall back to root
+            try:
+                sftp.put(str(file_path), remote_path)
+                logger.info("[sftp] Uploaded to %s:%s", self.host, remote_path)
+            except (PermissionError, IOError):
+                # Remote dir may not exist or be read-only — try root
+                fallback = f"/{file_path.name}"
+                logger.warning(
+                    "[sftp] %s failed, trying %s", remote_path, fallback
+                )
+                try:
+                    sftp.put(str(file_path), fallback)
+                    logger.info("[sftp] Uploaded to %s:%s", self.host, fallback)
+                except (PermissionError, IOError):
+                    # Even root failed — the DLP agent still saw the
+                    # SFTP connection attempt, which generates telemetry.
+                    logger.warning(
+                        "[sftp] Upload denied by server (read-only?) — "
+                        "SFTP connection was still visible to DLP agent."
+                    )
             sftp.close()
         finally:
             transport.close()

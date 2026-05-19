@@ -192,7 +192,7 @@ def check_and_handle_dlp_popup() -> bool:
 
 
 def _dismiss_dlp_window() -> bool:
-    """Find and dismiss the CyveraConsole.exe popup window."""
+    """Find and aggressively dismiss ALL CyveraConsole.exe popup windows."""
     import subprocess as _sp
 
     if not IS_WINDOWS:
@@ -209,59 +209,84 @@ def _dismiss_dlp_window() -> bool:
     except Exception:
         return False
 
-    logger.info("[actions] %s is running — looking for popup window…", DLP_PROCESS_NAME)
+    logger.info("[actions] %s is running — looking for popup windows…", DLP_PROCESS_NAME)
+    dismissed = False
 
-    # Try to find and focus the popup window using pyautogui/pygetwindow
     try:
         import pygetwindow as gw
-        # Look for windows belonging to Cortex / Cyvera
-        candidates = []
-        for w in gw.getAllWindows():
-            title = (w.title or "").lower()
-            if any(kw in title for kw in [
-                "cortex", "cyvera", "dlp", "data loss",
-                "block", "prevent", "policy", "alert",
-                "notification", "warning",
-            ]):
-                candidates.append(w)
 
-        if candidates:
-            win = candidates[0]
-            logger.info("[actions] Found DLP window: %r — dismissing…", win.title)
-            try:
-                win.activate()
-            except Exception:
-                win.minimize()
-                win.restore()
-            time.sleep(0.5)
-            # Press Enter to confirm/dismiss the dialog
-            pyautogui.press("enter")
-            time.sleep(0.5)
-            # Also try Tab+Enter in case Enter alone doesn't hit the button
-            pyautogui.press("tab")
-            time.sleep(0.2)
-            pyautogui.press("enter")
-            time.sleep(1)
-            logger.info("[actions] DLP popup dismissed.")
-            return True
+        # Broad keyword match for any Cortex/DLP-related window
+        _DLP_KEYWORDS = [
+            "cortex", "cyvera", "cyveraconsole", "dlp", "data loss",
+            "block", "prevent", "policy", "alert", "notification",
+            "warning", "palo alto", "traps", "xdr",
+        ]
+
+        for w in gw.getAllWindows():
+            title = (w.title or "").strip()
+            if not title:
+                continue
+            title_lower = title.lower()
+            if any(kw in title_lower for kw in _DLP_KEYWORDS):
+                logger.info("[actions] Found DLP window: %r — dismissing…", title)
+                _force_close_window(w)
+                dismissed = True
 
     except ImportError:
-        # pygetwindow not available — use Alt+Tab brute force
-        logger.debug("[actions] pygetwindow not available, trying Alt+Tab…")
+        logger.debug("[actions] pygetwindow not available")
 
-    # Fallback: if we know the process is running, try Alt-Tab + Enter
-    # This works when the popup just appeared and is the foreground window
+    # Fallback: brute-force the foreground window if process is running
+    if not dismissed:
+        try:
+            pyautogui.hotkey("alt", "tab")
+            time.sleep(0.5)
+            # Hammer multiple dismiss keys
+            for key in ["enter", "space", "escape"]:
+                pyautogui.press(key)
+                time.sleep(0.3)
+            logger.info("[actions] Sent dismiss keys to foreground window.")
+            dismissed = True
+        except Exception:
+            pass
+
+    return dismissed
+
+
+def _force_close_window(win) -> None:
+    """Aggressively close a window using multiple strategies."""
     try:
-        pyautogui.hotkey("alt", "tab")
-        time.sleep(1)
-        pyautogui.press("enter")
-        time.sleep(0.5)
-        logger.info("[actions] Sent Enter to foreground window (DLP process was running).")
-        return True
+        win.activate()
     except Exception:
-        pass
+        try:
+            win.minimize()
+            win.restore()
+        except Exception:
+            pass
+    time.sleep(0.5)
 
-    return False
+    # Strategy 1: Enter (default button)
+    pyautogui.press("enter")
+    time.sleep(0.4)
+
+    # Strategy 2: Space (some dialogs use Space for focused button)
+    pyautogui.press("space")
+    time.sleep(0.4)
+
+    # Strategy 3: Tab + Enter (move to next button and press)
+    pyautogui.press("tab")
+    time.sleep(0.2)
+    pyautogui.press("enter")
+    time.sleep(0.4)
+
+    # Strategy 4: Escape (close dialog)
+    pyautogui.press("escape")
+    time.sleep(0.4)
+
+    # Strategy 5: Alt+F4 (force close window)
+    pyautogui.hotkey("alt", "F4")
+    time.sleep(0.5)
+
+    logger.info("[actions] DLP window dismiss sequence complete.")
 
 
 # ── Scripted Native-App Flows ──────────────────────────────────────
@@ -284,16 +309,14 @@ def _open_app(app_name: str, startup_delay: float = 5.0) -> None:
 
 
 def _open_browser(url: str, startup_delay: float = 4.0) -> None:
-    """Open a URL in the default browser via OS launcher, cross-platform."""
-    if IS_MAC:
-        pyautogui.hotkey("command", "space")
-        time.sleep(0.8)
-    else:
-        pyautogui.press("win")
-        time.sleep(1)
-    _clipboard_type(url)
-    time.sleep(0.5)
-    pyautogui.press("enter")
+    """Open a URL in the default browser, cross-platform.
+
+    Uses webbrowser.open() which is more reliable than typing a URL
+    into the Start menu / Spotlight.
+    """
+    import webbrowser
+    logger.info("[actions] Opening browser to %s", url)
+    webbrowser.open(url)
     time.sleep(startup_delay)
 
 
@@ -349,12 +372,23 @@ def _do_slack_upload(
     pyautogui.press("enter")
 
     # 5. DLP popup handling
-    check_and_handle_dlp_popup()
+    dlp_blocked = check_and_handle_dlp_popup()
 
-    # 6. Send the file
-    logger.info("[actions] Sending file to channel…")
-    time.sleep(2)
-    pyautogui.press("enter")
+    if dlp_blocked:
+        # DLP blocked the upload — close any stuck dialogs so the
+        # next file can proceed cleanly.
+        logger.info("[actions] DLP blocked upload — cleaning up stuck dialogs…")
+        time.sleep(1)
+        pyautogui.press("escape")   # close file picker if still open
+        time.sleep(0.5)
+        pyautogui.press("escape")   # close any Slack overlay
+        time.sleep(0.5)
+        logger.info("[actions] Slack cleanup done — ready for next file.")
+    else:
+        # 6. Send the file (only if DLP didn't block)
+        logger.info("[actions] Sending file to channel…")
+        time.sleep(2)
+        pyautogui.press("enter")
 
     logger.info("[actions] Scripted Slack upload complete.")
 
