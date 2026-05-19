@@ -1,6 +1,6 @@
 # 🕵️ Leak-and-Seek
 
-> A Playwright + Python test harness for **Data Loss Prevention (DLP)** detectors. We hide sensitive data inside realistic files, push it through a dozen real-world transfer channels (Slack, Teams, OneDrive, Dropbox, Box, SFTP, WeTransfer, Telegram, WhatsApp, Zoom, …), and see if the DLP product on the other side actually catches it.
+> A Python test harness for **Data Loss Prevention (DLP)** detectors. We hide sensitive data inside realistic files, push it through a dozen real-world transfer channels (Slack, Teams, OneDrive, Dropbox, Box, SFTP, WeTransfer, Telegram, WhatsApp, Zoom, …), and see if the DLP product on the other side actually catches it.
 
 If your DLP can't find it, **you lose**. If it does, **everybody wins**.
 
@@ -74,8 +74,7 @@ This repo gives you all three.
 
 ### Prerequisites
 
-- **Node.js** 18+ (for Playwright) — only if you're running from source
-- **Python** 3.11+ (for the file-transfer leaker) — only if you're running from source
+- **Python** 3.11+ — only if you're running from source (the bundled `DLPSimulator.exe` already includes Python)
 - A DLP product positioned between this machine and the outbound channels you care about
 - The **[pre-login prerequisites](#-pre-login-prerequisites)** below — required regardless of whether you use the exe or run from source
 
@@ -100,10 +99,6 @@ If any of these is **not installed** or **not signed in**, the upload for that c
 ```powershell
 git clone https://github.com/SilentProcess87/leak-and-seek.git
 cd leak-and-seek
-
-# Node deps (Playwright)
-npm install
-npx playwright install --with-deps
 
 # Python deps (file-transfer leaker)
 pip install -r file_transfer/requirements.txt
@@ -162,31 +157,6 @@ Just drop any file (or one of the decoys from `detectors_profile_test_files/`) i
 
 ---
 
-## 🌐 Playwright tests
-
-The `tests/` folder hosts Playwright specs (UI / browser-based exfiltration paths, WeTransfer, etc.). Run them with:
-
-```powershell
-# Headless, all browsers
-npx playwright test
-
-# Single browser, headed
-npx playwright test --project=chromium --headed
-
-# HTML report
-npx playwright show-report
-```
-
-Defaults from `playwright.config.ts`:
-- Three projects: **Chromium**, **Firefox**, **WebKit**
-- Trace recording on first retry
-- Tests run in parallel (`fullyParallel: true`)
-- On CI: 2 retries, 1 worker
-
-The included `.github/workflows/playwright.yml` runs the suite on every push / PR to `main` and uploads the HTML report as an artifact.
-
----
-
 ## 📡 Supported transfer handlers
 
 | Handler      | What it does                                       | Credentials needed                              |
@@ -222,21 +192,13 @@ See any of the existing handlers (e.g. `slack_handler.py`) for the pattern.
 
 ```powershell
 # Install
-npm install
 pip install -r file_transfer/requirements.txt
-npx playwright install --with-deps
 
 # Run the watcher
 python file_transfer/main.py
 
 # Seed N random decoys
 python file_transfer/seed_inbox.py -n 3 -d 2
-
-# Run all Playwright tests
-npx playwright test
-
-# Open last Playwright report
-npx playwright show-report
 ```
 
 ---
