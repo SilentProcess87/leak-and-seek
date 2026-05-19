@@ -44,8 +44,10 @@ def _base_dir() -> Path:
 BASE_DIR = _base_dir()
 TEST_FILES_DIR = BASE_DIR / "detectors_profile_test_files"
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 IS_WINDOWS = platform.system() == "Windows"
+IS_MAC = platform.system() == "Darwin"
+TASK_NAME = "DLPSimulator"
 
 
 # ---------------------------------------------------------------------------
@@ -335,10 +337,152 @@ def _start_watcher(config_path: Path, watch_folder: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Service / startup task install
+# ---------------------------------------------------------------------------
+
+def _get_exe_path() -> str:
+    """Return the path to the running executable (or script)."""
+    if getattr(sys, "frozen", False):
+        return sys.executable  # e.g. C:\path\DLPSimulator.exe
+    return f'"{sys.executable}" "{Path(__file__).resolve()}"'
+
+
+def _install_service() -> None:
+    """Register the app to start automatically at user logon.
+
+    - Windows: creates a Scheduled Task (runs in user session — has
+      desktop access for pyautogui).
+    - macOS: creates a LaunchAgent plist.
+    """
+    exe = _get_exe_path()
+    _banner()
+
+    if IS_WINDOWS:
+        # Use schtasks to create a task that runs at logon
+        cmd = [
+            "schtasks", "/create",
+            "/tn", TASK_NAME,
+            "/tr", exe,
+            "/sc", "onlogon",
+            "/rl", "highest",
+            "/f",  # force overwrite if exists
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode == 0:
+            print(f"  ✓ Scheduled task '{TASK_NAME}' created.")
+            print(f"    Runs at every user logon with desktop access.")
+            print(f"    Exe: {exe}")
+            print()
+            print(f"  To start now:   schtasks /run /tn {TASK_NAME}")
+            print(f"  To remove:      DLPSimulator.exe --uninstall")
+        else:
+            print(f"  ✗ Failed to create scheduled task:")
+            print(f"    {result.stderr.strip()}")
+
+    elif IS_MAC:
+        plist_dir = Path.home() / "Library" / "LaunchAgents"
+        plist_dir.mkdir(parents=True, exist_ok=True)
+        plist_path = plist_dir / "com.panw.dlpsimulator.plist"
+
+        plist_content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.panw.dlpsimulator</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>{exe}</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>{WORK_DIR / 'dlpsimulator.log'}</string>
+    <key>StandardErrorPath</key>
+    <string>{WORK_DIR / 'dlpsimulator.err'}</string>
+</dict>
+</plist>
+"""
+        plist_path.write_text(plist_content, encoding="utf-8")
+        subprocess.run(["launchctl", "load", str(plist_path)], check=False)
+        print(f"  ✓ LaunchAgent installed: {plist_path.name}")
+        print(f"    Starts automatically at login.")
+        print(f"    To remove: DLPSimulator --uninstall")
+    else:
+        print("  ✗ Unsupported OS for service install.")
+
+
+def _uninstall_service() -> None:
+    """Remove the startup task / launch agent."""
+    _banner()
+
+    if IS_WINDOWS:
+        result = subprocess.run(
+            ["schtasks", "/delete", "/tn", TASK_NAME, "/f"],
+            capture_output=True, text=True,
+        )
+        if result.returncode == 0:
+            print(f"  ✓ Scheduled task '{TASK_NAME}' removed.")
+        else:
+            print(f"  ✗ Could not remove task: {result.stderr.strip()}")
+
+    elif IS_MAC:
+        plist_path = Path.home() / "Library" / "LaunchAgents" / "com.panw.dlpsimulator.plist"
+        subprocess.run(["launchctl", "unload", str(plist_path)], check=False)
+        if plist_path.is_file():
+            plist_path.unlink()
+        print(f"  ✓ LaunchAgent removed.")
+    else:
+        print("  ✗ Unsupported OS.")
+
+
+def _service_status() -> None:
+    """Check if the startup task is installed."""
+    _banner()
+
+    if IS_WINDOWS:
+        result = subprocess.run(
+            ["schtasks", "/query", "/tn", TASK_NAME],
+            capture_output=True, text=True,
+        )
+        if result.returncode == 0:
+            print(f"  ✓ Scheduled task '{TASK_NAME}' is installed.")
+            # Extract status line
+            for line in result.stdout.splitlines():
+                if TASK_NAME in line:
+                    print(f"    {line.strip()}")
+        else:
+            print(f"  ✗ Scheduled task '{TASK_NAME}' is NOT installed.")
+            print(f"    Run: DLPSimulator.exe --install")
+
+    elif IS_MAC:
+        plist = Path.home() / "Library" / "LaunchAgents" / "com.panw.dlpsimulator.plist"
+        if plist.is_file():
+            print(f"  ✓ LaunchAgent is installed.")
+        else:
+            print(f"  ✗ LaunchAgent is NOT installed.")
+            print(f"    Run: DLPSimulator --install")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+    # ── Handle service flags before anything else ───────────────────
+    if "--install" in sys.argv:
+        _install_service()
+        return
+    if "--uninstall" in sys.argv:
+        _uninstall_service()
+        return
+    if "--status" in sys.argv:
+        _service_status()
+        return
+
     _banner()
     WORK_DIR.mkdir(parents=True, exist_ok=True)
 
