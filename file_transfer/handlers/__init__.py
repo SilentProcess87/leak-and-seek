@@ -6,19 +6,22 @@ from typing import Any
 
 from .base import BaseHandler
 from .box_handler import BoxHandler
+from .desktop_agent_handler import DesktopAgentHandler
 from .dropbox_handler import DropboxHandler
 from .local_copy_handler import LocalCopyHandler
 from .onedrive_handler import OneDriveHandler
 from .sftp_handler import SFTPHandler
-from .slack_handler import SlackHandler
 from .teams_handler import TeamsHandler
 from .telegram_handler import TelegramHandler
 from .wetransfer_handler import WeTransferHandler
 from .whatsapp_handler import WhatsAppHandler
 from .zoom_handler import ZoomHandler
 
+# NOTE: SlackHandler (API-based) removed — it bypasses endpoint DLP agents.
+# Use "desktop_agent" with app=slack instead for DLP-visible transfers.
+
 HANDLER_MAP: dict[str, type[BaseHandler]] = {
-    "slack": SlackHandler,
+    "desktop_agent": DesktopAgentHandler,
     "local_copy": LocalCopyHandler,
     "sftp": SFTPHandler,
     "teams": TeamsHandler,

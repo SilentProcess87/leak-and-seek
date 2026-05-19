@@ -4,11 +4,18 @@
 # =============================================================================
 
 rules:
-  # Rule 1 – Send every PDF to Slack
+  # ── DLP-visible GUI uploads (desktop_agent) ──────────────────────
+  # These use native GUI automation so endpoint DLP agents can detect
+  # the file transfer.  Slack uses a scripted native flow (no API key
+  # needed); other apps use Claude Computer Use.
+
+  # Rule 1 – Send every PDF to Slack via native desktop app
   - name: pdf_reports
     pattern: "*.pdf"
     handlers:
-      - type: slack
+      - type: desktop_agent
+        app: slack
+        channel: "#general"
         message: "New PDF report uploaded"
 
   # Rule 2 – Copy spreadsheets to a local/network backup folder
@@ -23,21 +30,28 @@ rules:
     handlers:
       - type: sftp
 
-  # Rule 4 – Send Word docs to Teams and OneDrive
+  # Rule 4 – Send Word docs to Teams (GUI) and OneDrive
   - name: word_docs
     pattern: "*.docx"
     handlers:
-      - type: teams
+      - type: desktop_agent
+        app: teams
+        team: "Security Team"
+        channel: "DLP Tests"
         message: "New document shared"
       - type: onedrive
 
-  # Rule 5 – Send images to Telegram and WhatsApp
+  # Rule 5 – Send images to Telegram and WhatsApp (GUI)
   - name: image_alerts
     pattern: "*.png"
     handlers:
-      - type: telegram
+      - type: desktop_agent
+        app: telegram
+        chat: "DLP Testing"
         message: "Image uploaded"
-      - type: whatsapp
+      - type: desktop_agent
+        app: whatsapp
+        contact: "DLP Test Group"
         message: "New image"
 
   # Rule 6 – Archive ZIPs to Box
@@ -53,7 +67,7 @@ rules:
       - type: wetransfer
         message: "Large file transfer"
 
-  # Rule 8 – Route test .txt files to all services
+  # Rule 8 – Route test .txt files (DLP test battery)
   - name: txt_all_services
     pattern: "*.txt"
     handlers:
@@ -63,7 +77,9 @@ rules:
       - type: wetransfer
         message: "DLP test file transfer"
       - type: local_copy
-      - type: slack
+      - type: desktop_agent
+        app: slack
+        channel: "#dlp-testing"
         message: "DLP test file detected"
 
   # Rule 9 – Notify Zoom chat about logs
@@ -73,9 +89,11 @@ rules:
       - type: zoom
         message: "New log file"
 
-  # Rule 8 – Catch-all: send everything to Slack
+  # Rule 10 – Catch-all: send to Slack via native GUI
   - name: catch_all
     pattern: "*"
     handlers:
-      - type: slack
+      - type: desktop_agent
+        app: slack
+        channel: "#general"
         message: "New file detected"

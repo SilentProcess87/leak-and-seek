@@ -34,7 +34,12 @@ from pathlib import Path
 from typing import Any
 
 import requests
-from playwright.sync_api import sync_playwright, TimeoutError as PwTimeout
+
+try:
+    from playwright.sync_api import sync_playwright, TimeoutError as PwTimeout
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
 
 from .base import BaseHandler
 
@@ -63,6 +68,13 @@ class WeTransferHandler(BaseHandler):
 
     # ------------------------------------------------------------------
     def validate_credentials(self) -> bool:
+        if not HAS_PLAYWRIGHT:
+            logger.warning(
+                "[wetransfer] Playwright is not installed — WeTransfer handler "
+                "disabled.  Install 'playwright' or use 'desktop_agent' with "
+                "app=wetransfer instead."
+            )
+            return False
         if not self.recipient_email:
             logger.error("[wetransfer] WETRANSFER_RECIPIENT_EMAIL must be set in .env")
             return False
