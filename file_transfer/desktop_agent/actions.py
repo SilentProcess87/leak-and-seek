@@ -54,6 +54,12 @@ def _clipboard_type(text: str) -> None:
 # Safety: tiny pause between pyautogui actions so DLP agents can react
 pyautogui.PAUSE = 0.3
 
+# Global lock — only ONE desktop agent action can run at a time.
+# pyautogui controls the physical keyboard/mouse, so parallel
+# scripted flows would corrupt each other.
+import threading
+_DESKTOP_LOCK = threading.Lock()
+
 # Path to the cropped image of the Cortex DLP "confirm" button.
 # Users should place their own screenshot crop next to this file or
 # set the env var to an absolute path.
@@ -307,7 +313,18 @@ def scripted_slack_upload(
     shortcuts, then handle any Cortex DLP popup.
 
     Derived from ``SlackNative.py``.  Cross-platform (Windows + Mac).
+    Serialized via _DESKTOP_LOCK — only one upload at a time.
     """
+    with _DESKTOP_LOCK:
+        _do_slack_upload(channel, file_path, startup_delay=startup_delay)
+
+
+def _do_slack_upload(
+    channel: str,
+    file_path: str | Path,
+    *,
+    startup_delay: float = 5.0,
+) -> None:
     file_path = str(Path(file_path).resolve())
     logger.info("[actions] Scripted Slack upload → channel=%r, file=%s", channel, file_path)
 
@@ -350,11 +367,19 @@ def scripted_wetransfer_upload(
     startup_delay: float = 6.0,
 ) -> None:
     """Upload a file via WeTransfer using pyautogui browser automation.
-
-    Opens wetransfer.com in the default browser, navigates the UI with
-    Tab/Enter/clipboard-paste, uploads the file through the native file
-    picker (DLP-visible), and fills in recipient/sender emails.
+    Serialized via _DESKTOP_LOCK.
     """
+    with _DESKTOP_LOCK:
+        _do_wetransfer_upload(file_path, recipient, sender, startup_delay=startup_delay)
+
+
+def _do_wetransfer_upload(
+    file_path: str | Path,
+    recipient: str,
+    sender: str = "",
+    *,
+    startup_delay: float = 6.0,
+) -> None:
     file_path = str(Path(file_path).resolve())
     logger.info("[actions] WeTransfer upload → %s → %s", file_path, recipient)
 
