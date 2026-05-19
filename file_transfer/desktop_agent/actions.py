@@ -339,8 +339,8 @@ def _do_slack_upload(
     pyautogui.press("enter")
     time.sleep(2)
 
-    # 3. Open file upload dialog (Ctrl/Cmd+U)
-    _hotkey_ctrl("u")
+    # 3. Open file upload dialog (Ctrl/Cmd+O)
+    _hotkey_ctrl("o")
     time.sleep(2.5)
 
     # 4. Type the file path in the file picker and confirm
