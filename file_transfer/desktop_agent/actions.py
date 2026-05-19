@@ -192,101 +192,155 @@ def check_and_handle_dlp_popup() -> bool:
 
 
 def _dismiss_dlp_window() -> bool:
-    """Find and aggressively dismiss ALL CyveraConsole.exe popup windows."""
+    """Find and dismiss CyveraConsole.exe popup windows.
+
+    Uses Win32 API to enumerate windows by process ID — this is
+    reliable even when pygetwindow can't find the window by title.
+    """
     import subprocess as _sp
 
     if not IS_WINDOWS:
         return False
 
-    # Check if the process is running
-    try:
-        result = _sp.run(
-            ["tasklist", "/FI", f"IMAGENAME eq {DLP_PROCESS_NAME}", "/FO", "CSV", "/NH"],
-            capture_output=True, text=True, timeout=5,
-        )
-        if DLP_PROCESS_NAME.lower() not in result.stdout.lower():
-            return False
-    except Exception:
+    # Get the PID(s) of CyveraConsole.exe
+    pids = _get_process_pids(DLP_PROCESS_NAME)
+    if not pids:
         return False
 
-    logger.info("[actions] %s is running — looking for popup windows…", DLP_PROCESS_NAME)
+    logger.info("[actions] %s running (PIDs: %s) — finding popup windows…",
+                DLP_PROCESS_NAME, pids)
+
+    # Find all windows belonging to CyveraConsole.exe via Win32 API
+    hwnd_list = _get_windows_by_pids(pids)
+    if not hwnd_list:
+        # Process is running but no visible windows — try foreground
+        logger.info("[actions] No windows found by PID — trying foreground…")
+        return _dismiss_foreground()
+
     dismissed = False
-
-    try:
-        import pygetwindow as gw
-
-        # Broad keyword match for any Cortex/DLP-related window
-        _DLP_KEYWORDS = [
-            "cortex", "cyvera", "cyveraconsole", "dlp", "data loss",
-            "block", "prevent", "policy", "alert", "notification",
-            "warning", "palo alto", "traps", "xdr",
-        ]
-
-        for w in gw.getAllWindows():
-            title = (w.title or "").strip()
-            if not title:
-                continue
-            title_lower = title.lower()
-            if any(kw in title_lower for kw in _DLP_KEYWORDS):
-                logger.info("[actions] Found DLP window: %r — dismissing…", title)
-                _force_close_window(w)
-                dismissed = True
-
-    except ImportError:
-        logger.debug("[actions] pygetwindow not available")
-
-    # Fallback: brute-force the foreground window if process is running
-    if not dismissed:
-        try:
-            pyautogui.hotkey("alt", "tab")
-            time.sleep(0.5)
-            # Hammer multiple dismiss keys
-            for key in ["enter", "space", "escape"]:
-                pyautogui.press(key)
-                time.sleep(0.3)
-            logger.info("[actions] Sent dismiss keys to foreground window.")
-            dismissed = True
-        except Exception:
-            pass
+    for hwnd, title in hwnd_list:
+        logger.info("[actions] Found DLP window (hwnd=%s): %r — dismissing…",
+                    hwnd, title)
+        _activate_hwnd(hwnd)
+        time.sleep(0.5)
+        _dismiss_dialog_keys()
+        dismissed = True
 
     return dismissed
 
 
-def _force_close_window(win) -> None:
-    """Aggressively close a window using multiple strategies."""
+def _get_process_pids(process_name: str) -> list[int]:
+    """Get PIDs of a running process by name."""
+    import subprocess as _sp
     try:
-        win.activate()
+        result = _sp.run(
+            ["tasklist", "/FI", f"IMAGENAME eq {process_name}", "/FO", "CSV", "/NH"],
+            capture_output=True, text=True, timeout=5,
+        )
+        pids = []
+        for line in result.stdout.strip().splitlines():
+            parts = line.strip('"').split('","')
+            if len(parts) >= 2 and parts[0].lower() == process_name.lower():
+                try:
+                    pids.append(int(parts[1]))
+                except ValueError:
+                    pass
+        return pids
     except Exception:
-        try:
-            win.minimize()
-            win.restore()
-        except Exception:
-            pass
+        return []
+
+
+def _get_windows_by_pids(pids: list[int]) -> list[tuple[int, str]]:
+    """Enumerate all visible windows belonging to given PIDs using Win32 API."""
+    results: list[tuple[int, str]] = []
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        user32 = ctypes.windll.user32
+        pid_set = set(pids)
+
+        # Callback for EnumWindows
+        WNDENUMPROC = ctypes.WINFUNCTYPE(
+            wintypes.BOOL, wintypes.HWND, wintypes.LPARAM
+        )
+
+        def _callback(hwnd, _lparam):
+            # Check if window is visible
+            if not user32.IsWindowVisible(hwnd):
+                return True
+            # Get the PID of this window
+            window_pid = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(window_pid))
+            if window_pid.value in pid_set:
+                # Get window title
+                length = user32.GetWindowTextLengthW(hwnd)
+                buf = ctypes.create_unicode_buffer(length + 1)
+                user32.GetWindowTextW(hwnd, buf, length + 1)
+                results.append((hwnd, buf.value))
+            return True
+
+        user32.EnumWindows(WNDENUMPROC(_callback), 0)
+    except Exception as exc:
+        logger.debug("[actions] Win32 EnumWindows error: %s", exc)
+
+    return results
+
+
+def _activate_hwnd(hwnd: int) -> None:
+    """Bring a window to foreground by its handle."""
+    try:
+        import ctypes
+        user32 = ctypes.windll.user32
+        # Restore if minimized
+        SW_RESTORE = 9
+        user32.ShowWindow(hwnd, SW_RESTORE)
+        time.sleep(0.2)
+        # Bring to foreground
+        user32.SetForegroundWindow(hwnd)
+    except Exception as exc:
+        logger.debug("[actions] Could not activate hwnd %s: %s", hwnd, exc)
+
+
+def _dismiss_dialog_keys() -> None:
+    """Send a sequence of keys to dismiss a dialog — covers all button layouts.
+
+    The Cortex DLP popup has Override / Confirm buttons and a text field.
+    Tab navigates between them; Enter/Space clicks the focused one.
+    """
+    # Tab past the text field to the first button, then press it
+    for _ in range(3):
+        pyautogui.press("tab")
+        time.sleep(0.2)
+    pyautogui.press("enter")
     time.sleep(0.5)
 
-    # Strategy 1: Enter (default button)
-    pyautogui.press("enter")
-    time.sleep(0.4)
-
-    # Strategy 2: Space (some dialogs use Space for focused button)
+    # If that didn't close it, try Space on current focus
     pyautogui.press("space")
-    time.sleep(0.4)
+    time.sleep(0.3)
 
-    # Strategy 3: Tab + Enter (move to next button and press)
-    pyautogui.press("tab")
-    time.sleep(0.2)
+    # Try Enter again (might now be on a different button)
     pyautogui.press("enter")
-    time.sleep(0.4)
+    time.sleep(0.3)
 
-    # Strategy 4: Escape (close dialog)
+    # Escape as last resort
     pyautogui.press("escape")
-    time.sleep(0.4)
+    time.sleep(0.3)
 
-    # Strategy 5: Alt+F4 (force close window)
+    # Alt+F4 nuclear option
     pyautogui.hotkey("alt", "F4")
-    time.sleep(0.5)
+    time.sleep(0.3)
 
-    logger.info("[actions] DLP window dismiss sequence complete.")
+    logger.info("[actions] DLP dismiss key sequence complete.")
+
+
+def _dismiss_foreground() -> bool:
+    """Fallback: send dismiss keys to whatever is in the foreground."""
+    try:
+        _dismiss_dialog_keys()
+        return True
+    except Exception:
+        return False
 
 
 # ── Scripted Native-App Flows ──────────────────────────────────────

@@ -17,17 +17,31 @@ from handlers.base import BaseHandler
 
 logger = logging.getLogger(__name__)
 
+import os
+import threading
+
 # Seconds to wait after detecting a file before processing it.
 # Gives the OS time to finish writing / moving the file.
-_SETTLE_DELAY = 1.0
+_SETTLE_DELAY = 2.0
+
+# Seconds to wait BETWEEN handlers for the same file.
+# Gives DLP agents time to react and prevents UI overlap.
+_HANDLER_DELAY = float(os.getenv("DLP_HANDLER_DELAY", "5"))
+
+# Seconds to wait BETWEEN processing different files.
+_FILE_DELAY = float(os.getenv("DLP_FILE_DELAY", "10"))
 
 # Files to ignore (OS-generated metadata)
 _IGNORED_NAMES = {".DS_Store", "Thumbs.db", "desktop.ini"}
 _IGNORED_PREFIXES = ("~$", ".")  # Office temp files, hidden files
 
-# Thread pool for processing files in parallel
-_FILE_EXECUTOR = ThreadPoolExecutor(max_workers=4, thread_name_prefix="file")
-_HANDLER_EXECUTOR = ThreadPoolExecutor(max_workers=8, thread_name_prefix="handler")
+# Single-threaded: only ONE file processed at a time.
+# Desktop agent controls the physical keyboard/mouse so parallel
+# processing would create chaos.
+_FILE_EXECUTOR = ThreadPoolExecutor(max_workers=1, thread_name_prefix="file")
+
+# Global lock for serial file processing
+_FILE_LOCK = threading.Lock()
 
 
 class _Rule:
@@ -98,33 +112,52 @@ class _EventHandler(FileSystemEventHandler):
 
     # ------------------------------------------------------------------
     def _dispatch(self, file_path: Path) -> None:
+        """Process one file through all handlers SEQUENTIALLY."""
         time.sleep(_SETTLE_DELAY)
         if not file_path.is_file():
             return  # already gone (race with previous deletion)
+
+        # Only one file at a time — wait for previous file to finish
+        with _FILE_LOCK:
+            self._process_file(file_path)
+
+    def _process_file(self, file_path: Path) -> None:
+        if not file_path.is_file():
+            return
         logger.info("New file detected: %s", file_path.name)
         matched = False
         for rule in self.rules:
             if rule.matches(file_path.name):
                 matched = True
-                logger.info("  → Matched rule '%s' (%d handlers in parallel)",
+                logger.info("  → Matched rule '%s' (%d handlers, running sequentially)",
                             rule.name, len(rule.handlers))
-                # Run handlers in parallel within the rule
-                futures = [
-                    _HANDLER_EXECUTOR.submit(handler.process, file_path)
-                    for handler in rule.handlers
-                ]
-                for fut in futures:
+
+                # Run each handler ONE AT A TIME with a wait between them
+                for i, handler in enumerate(rule.handlers):
+                    logger.info("  → [%d/%d] Running handler: %s",
+                                i + 1, len(rule.handlers), handler.name)
                     try:
-                        fut.result()  # surface exceptions
+                        handler.process(file_path)
                     except Exception:
-                        logger.exception("Handler failed for %s", file_path.name)
+                        logger.exception("Handler '%s' failed for %s",
+                                         handler.name, file_path.name)
+
+                    # Wait between handlers so DLP can react
+                    if i < len(rule.handlers) - 1:
+                        logger.debug("  → Waiting %.1fs before next handler…",
+                                     _HANDLER_DELAY)
+                        time.sleep(_HANDLER_DELAY)
 
                 # Delete the file from the watch folder after all handlers
-                # have finished so it doesn't get re-processed.
                 _delete_after_transfer(file_path)
                 break  # first-match-wins
+
         if not matched:
             logger.info("  → No matching rule for %s", file_path.name)
+
+        # Wait before processing the next file
+        logger.debug("Waiting %.1fs before next file…", _FILE_DELAY)
+        time.sleep(_FILE_DELAY)
 
 
 def _delete_after_transfer(file_path: Path) -> None:
