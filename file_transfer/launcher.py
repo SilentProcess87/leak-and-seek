@@ -120,11 +120,12 @@ def _setup_wizard() -> Path:
     env["SLACK_CHANNEL"] = _ask("Slack channel", "#general")
     print()
 
-    # ── Cloud sync folders ─────────────────────────────────────────
-    print("  ── Cloud Sync Folders (leave blank to skip) ──")
-    env["BOX_SYNC_FOLDER"] = _ask("Box Drive sync folder", "")
-    env["DROPBOX_SYNC_FOLDER"] = _ask("Dropbox sync folder", "")
-    env["ONEDRIVE_SYNC_FOLDER"] = _ask("OneDrive sync folder", "")
+    # ── Cloud sync folders (auto-detect) ───────────────────────────
+    print("  ── Cloud Sync Services (auto-detected) ──")
+    detected = _detect_cloud_services()
+    env["BOX_SYNC_FOLDER"] = _offer_sync_folder("Box", detected.get("box", ""))
+    env["DROPBOX_SYNC_FOLDER"] = _offer_sync_folder("Dropbox", detected.get("dropbox", ""))
+    env["ONEDRIVE_SYNC_FOLDER"] = _offer_sync_folder("OneDrive", detected.get("onedrive", ""))
     print()
 
     # ── SFTP ───────────────────────────────────────────────────────
@@ -192,6 +193,89 @@ def _setup_wizard() -> Path:
     _write_hidden_config(env)
 
     return Path(inbox)
+
+
+# ---------------------------------------------------------------------------
+# Cloud service auto-detection
+# ---------------------------------------------------------------------------
+
+def _detect_cloud_services() -> dict[str, str]:
+    """Scan the machine for installed cloud sync clients.
+
+    Returns a dict of service_name → detected_root_path for each
+    service found.  Only returns services that actually exist on disk.
+    """
+    home = Path.home()
+    found: dict[str, str] = {}
+
+    # ── Box Drive ──────────────────────────────────────────────
+    for candidate in [home / "Box", home / "Box Sync"]:
+        if candidate.is_dir():
+            found["box"] = str(candidate)
+            break
+
+    # ── Dropbox ───────────────────────────────────────────────
+    for candidate in [home / "Dropbox"]:
+        if candidate.is_dir():
+            found["dropbox"] = str(candidate)
+            break
+
+    # ── OneDrive ──────────────────────────────────────────────
+    # Check env var first (Windows sets this), then common paths
+    od_env = os.getenv("OneDrive", "")
+    if od_env and Path(od_env).is_dir():
+        found["onedrive"] = od_env
+    else:
+        for candidate in [home / "OneDrive", home / "OneDrive - Personal"]:
+            if candidate.is_dir():
+                found["onedrive"] = str(candidate)
+                break
+        # macOS: ~/Library/CloudStorage/OneDrive-*
+        if IS_MAC and "onedrive" not in found:
+            cs = home / "Library" / "CloudStorage"
+            if cs.is_dir():
+                for d in cs.iterdir():
+                    if d.is_dir() and d.name.lower().startswith("onedrive"):
+                        found["onedrive"] = str(d)
+                        break
+
+    return found
+
+
+def _offer_sync_folder(service: str, detected_root: str) -> str:
+    """For a detected cloud service, offer default Uploads folder.
+
+    - If the service is installed, show the default path and ask Y/n.
+    - If Uploads subfolder doesn't exist, create it.
+    - If the user wants a different path, let them type it.
+    - If not installed, print skip message and return empty.
+    """
+    if not detected_root:
+        print(f"  {service}: not detected — skipped")
+        return ""
+
+    default_uploads = str(Path(detected_root) / "Uploads")
+    print(f"  {service}: found at {detected_root}")
+    choice = input(f"    Use {default_uploads}? [Y/n/custom path]: ").strip().lower()
+
+    if choice in ("", "y", "yes"):
+        folder = default_uploads
+    elif choice in ("n", "no"):
+        print(f"    {service}: skipped")
+        return ""
+    else:
+        # User typed a custom path
+        folder = choice
+
+    # Create the folder if it doesn't exist
+    folder_path = Path(folder)
+    if not folder_path.is_dir():
+        folder_path.mkdir(parents=True, exist_ok=True)
+        print(f"    ✓ Created: {folder}")
+    else:
+        print(f"    ✓ Exists: {folder}")
+
+    return folder
 
 
 # ---------------------------------------------------------------------------
