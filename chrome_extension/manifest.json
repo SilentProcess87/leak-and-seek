@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "DLP Simulator - WeTransfer Upload",
+  "version": "1.0.0",
+  "description": "Automates file uploads on WeTransfer for DLP testing. Triggered via URL hash parameters.",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": ["*://wetransfer.com/*", "*://www.wetransfer.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {}
+}
