@@ -636,13 +636,21 @@ def main() -> None:
     ns = _init_staging()
     print(f"  ✓ {ns} test file(s) in staging/")
 
-    # ── Initial seed — copy from staging → inbox ──────────────────
-    n = _seed_inbox(inbox)
-    print(f"  ✓ {n} file(s) seeded into inbox (will be deleted after transfer)")
-
     # ── Start auto-seed timer ──────────────────────────────────────
     _start_auto_seed(inbox)
     print(f"  ✓ Auto-seed: {seed_count} file(s) every {interval}s")
+
+    # ── Schedule initial seed AFTER watcher starts ─────────────────
+    # Files must be dropped AFTER watchdog is listening, otherwise it
+    # won't detect them (watchdog only fires on new events).
+    def _delayed_seed():
+        time.sleep(3)  # give watcher time to start
+        n = _seed_inbox(inbox)
+        logging.getLogger("launcher").info(
+            "Initial seed: %d file(s) dropped into %s", n, inbox,
+        )
+    threading.Thread(target=_delayed_seed, daemon=True).start()
+    print(f"  ✓ Initial seed will drop files in 3s (after watcher starts)")
 
     # ── Start watcher (blocking — runs forever) ────────────────────
     print(f"  ✓ Watcher active — monitoring {inbox}")
