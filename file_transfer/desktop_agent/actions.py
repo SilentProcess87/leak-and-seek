@@ -467,13 +467,10 @@ def _open_browser(url: str, startup_delay: float = 6.0) -> None:
 
 
 def _wait_for_page_load(url: str, timeout: int = 30, max_retries: int = 3) -> bool:
-    """Wait for a browser page to finish loading by checking the title bar.
+    """Wait for a browser page to finish loading by checking window titles.
 
-    Looks for a browser window whose title contains part of the URL's
-    domain (e.g. 'wetransfer' for wetransfer.com).  If not found within
-    *timeout* seconds, refreshes (F5) and retries up to *max_retries* times.
-
-    Returns True if the page was detected, False if all retries exhausted.
+    Uses Win32 EnumWindows (reliable inside PyInstaller bundles) to scan
+    ALL visible window titles for the domain name.
     """
     from urllib.parse import urlparse
     domain_hint = urlparse(url).netloc.replace("www.", "").split(".")[0].lower()
@@ -483,15 +480,10 @@ def _wait_for_page_load(url: str, timeout: int = 30, max_retries: int = 3) -> bo
     for attempt in range(1, max_retries + 1):
         deadline = time.time() + timeout
         while time.time() < deadline:
-            if IS_WINDOWS:
-                try:
-                    import pygetwindow as gw
-                    for w in gw.getAllWindows():
-                        if domain_hint in (w.title or "").lower():
-                            logger.info("[actions] Page loaded (title: %r)", w.title)
-                            return True
-                except ImportError:
-                    pass
+            if _find_window_by_title(domain_hint):
+                logger.info("[actions] Page loaded (found '%s' in window titles)",
+                            domain_hint)
+                return True
             time.sleep(2)
 
         if attempt < max_retries:
@@ -500,7 +492,7 @@ def _wait_for_page_load(url: str, timeout: int = 30, max_retries: int = 3) -> bo
                 timeout, attempt, max_retries,
             )
             pyautogui.press("F5")
-            time.sleep(5)  # give refresh a head start
+            time.sleep(5)
         else:
             logger.warning(
                 "[actions] Page still not loaded after %d attempts — continuing anyway.",
@@ -508,6 +500,42 @@ def _wait_for_page_load(url: str, timeout: int = 30, max_retries: int = 3) -> bo
             )
 
     return False
+
+
+def _find_window_by_title(hint: str) -> bool:
+    """Check if any visible window title contains *hint* (case-insensitive).
+
+    Uses Win32 EnumWindows directly — works reliably in PyInstaller bundles
+    unlike pygetwindow which can fail to import.
+    """
+    if not IS_WINDOWS:
+        return False
+    found = False
+    try:
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+
+        WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+
+        def _cb(hwnd, _lp):
+            nonlocal found
+            if not user32.IsWindowVisible(hwnd):
+                return True
+            length = user32.GetWindowTextLengthW(hwnd)
+            if length == 0:
+                return True
+            buf = ctypes.create_unicode_buffer(length + 1)
+            user32.GetWindowTextW(hwnd, buf, length + 1)
+            if hint in buf.value.lower():
+                found = True
+                return False  # stop enumerating
+            return True
+
+        user32.EnumWindows(WNDENUMPROC(_cb), 0)
+    except Exception:
+        pass
+    return found
 
 
 def _hotkey_ctrl(key: str) -> None:
@@ -629,40 +657,53 @@ def _do_wetransfer_upload(
     # 2. Wait for page to actually load (retry with refresh if needed)
     _wait_for_page_load("https://wetransfer.com", timeout=30, max_retries=3)
 
-    # 3. Dismiss any popups (cookie consent, site info, etc.)
-    pyautogui.press("escape")
+    # 3. Maximize browser window so coordinates are predictable
+    logger.info("[actions] Maximizing browser window…")
+    pyautogui.hotkey("win", "up")
+    time.sleep(1)
+    pyautogui.press("escape")  # dismiss any popups/overlays
     time.sleep(1)
 
-    # 3. Click "Add files" button — it's in the left panel
-    #    Use the "+" icon / "Add files" text area.
-    #    Click at roughly (115, 380) relative to the page area.
-    logger.info("[actions] Clicking 'Add files' button…")
-    pyautogui.click(115, 380)
+    # Get screen size to calculate relative positions
+    sw, sh = pyautogui.size()
+
+    # 4. Click "Add files" button (upper-left of the upload panel)
+    #    The upload panel is roughly at x=7%, y=35% of screen
+    add_x = int(sw * 0.07)
+    add_y = int(sh * 0.35)
+    logger.info("[actions] Clicking 'Add files' at (%d, %d)…", add_x, add_y)
+    pyautogui.click(add_x, add_y)
     time.sleep(3)  # wait for file picker dialog
 
-    # 4. Type file path in the file picker and confirm
+    # 5. Type file path in the file picker and confirm
     _clipboard_type(file_path)
     time.sleep(1)
     pyautogui.press("enter")
     time.sleep(4)  # wait for upload to start
 
-    # 5. Click "Email to" field and paste recipient
-    logger.info("[actions] Filling 'Email to' field…")
-    pyautogui.click(165, 461)  # "Email to" field area
+    # 6. Click "Email to" field and paste recipient
+    email_x = int(sw * 0.10)
+    email_y = int(sh * 0.44)
+    logger.info("[actions] Filling 'Email to' at (%d, %d)…", email_x, email_y)
+    pyautogui.click(email_x, email_y)
     time.sleep(0.5)
     _clipboard_type(recipient)
     pyautogui.press("enter")  # confirm email chip
     time.sleep(1)
 
-    # 6. Click "Title" / message field
-    pyautogui.click(165, 545)  # Title field
+    # 7. Click "Title" field
+    title_x = int(sw * 0.10)
+    title_y = int(sh * 0.53)
+    pyautogui.click(title_x, title_y)
     time.sleep(0.3)
     _clipboard_type("DLP Test File")
     time.sleep(0.5)
 
-    # 7. Click "Transfer" button
-    logger.info("[actions] Clicking 'Transfer' button…")
-    pyautogui.click(167, 642)  # Transfer button
+    # 8. Click "Transfer" button
+    transfer_x = int(sw * 0.10)
+    transfer_y = int(sh * 0.62)
+    logger.info("[actions] Clicking 'Transfer' at (%d, %d)…", transfer_x, transfer_y)
+    pyautogui.click(transfer_x, transfer_y)
     time.sleep(5)
 
     # 8. DLP popup handling
